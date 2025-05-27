@@ -13,15 +13,16 @@ struct ForecastView: View {
                 Text("Forecast data is not available.")
                     .foregroundColor(.secondary)
             } else {
-                List(dailyForecasts) { forecast in
-                    DailyForecastRowView(forecast: forecast)
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(dailyForecasts) { forecast in
+                        DailyForecastRowView(forecast: forecast)
+                    }
                 }
-                .listStyle(.plain)
             }
         }
-        .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(15)
+//        .padding()
+//        .background(Color(uiColor: .secondarySystemBackground))
+//        .cornerRadius(15)
     }
 }
 

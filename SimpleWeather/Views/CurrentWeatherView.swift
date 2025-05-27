@@ -10,7 +10,7 @@ struct CurrentWeatherView: View {
                 .foregroundColor(.secondary)
 
             HStack {
-                Text(currentWeather.temperature.formatted(.measurement(width: .abbreviated, usage: .weather)))
+                Text(currentWeather.temperature.roundedUp().formatted(.measurement(width: .abbreviated, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))
                     .font(.system(size: 60, weight: .bold))
                 Spacer()
                 AnimatedWeatherIconView(symbolName: currentWeather.conditionSymbolName)
@@ -21,7 +21,7 @@ struct CurrentWeatherView: View {
             Text(currentWeather.conditionDescription)
                 .font(.title3)
 
-            Text("Feels like: \(currentWeather.feelsLikeTemperature.formatted(.measurement(width: .abbreviated, usage: .weather)))")
+            Text("Feels like: \(currentWeather.feelsLikeTemperature.roundedUp().formatted(.measurement(width: .abbreviated, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))")
                 .font(.callout)
                 .foregroundColor(.secondary)
 
@@ -67,6 +67,7 @@ struct CurrentWeatherView: View {
             .foregroundColor(.secondary)
 
             // More details will be added here for other sub-tasks
+            
         }
         .padding()
         .background(Color(uiColor: .secondarySystemBackground))

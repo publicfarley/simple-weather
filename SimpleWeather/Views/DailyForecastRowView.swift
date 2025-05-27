@@ -17,8 +17,8 @@ struct DailyForecastRowView: View {
             
             Spacer()
             
-            Text("H: \(forecast.highTemperature.formatted(.measurement(width: .narrow, usage: .weather)))")
-            Text("L: \(forecast.lowTemperature.formatted(.measurement(width: .narrow, usage: .weather)))")
+            Text("H: \(forecast.highTemperature.roundedUp().formatted(.measurement(width: .narrow, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))")
+            Text("L: \(forecast.lowTemperature.roundedUp().formatted(.measurement(width: .narrow, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))")
                 .foregroundColor(.secondary)
             
             Spacer()

@@ -74,7 +74,7 @@ class WeatherService: ObservableObject {
         print("[WeatherService] getSevenDayForecast called for location: \(location.coordinate)") // DEBUG
         let weatherKitDailyForecast = try await weatherService.weather(for: location, including: .daily)
         
-        let customDailyForecasts = weatherKitDailyForecast.forecast.map { dayWeather in
+        let allDailyForecasts = weatherKitDailyForecast.forecast.map { dayWeather in
             DailyForecast(
                 date: dayWeather.date,
                 highTemperature: dayWeather.highTemperature,
@@ -84,8 +84,10 @@ class WeatherService: ObservableObject {
                 precipitationChance: dayWeather.precipitationChance
             )
         }
-        print("[WeatherService] getSevenDayForecast: Successfully mapped daily forecast.") // DEBUG
-        return customDailyForecasts
+        
+        let sevenDayForecasts = Array(allDailyForecasts.prefix(7)) // Take the first 7 days
+        print("[WeatherService] getSevenDayForecast: Successfully mapped and trimmed to 7-day forecast.") // DEBUG
+        return sevenDayForecasts
     }
 }
 
