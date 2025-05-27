@@ -4,26 +4,34 @@ struct CurrentWeatherView: View {
     let currentWeather: CurrentWeather
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Now")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
-            HStack {
+            HStack(alignment: .center, spacing: 8) {
                 Text(currentWeather.temperature.roundedUp().formatted(.measurement(width: .abbreviated, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))
-                    .font(.system(size: 60, weight: .bold))
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                
                 Spacer()
+                
                 AnimatedWeatherIconView(symbolName: currentWeather.conditionSymbolName)
-                    .font(.system(size: 50)) // Adjust size as needed for layout
+                    .font(.system(size: 50))
+                    .minimumScaleFactor(0.5)
                     .accessibilityLabel(Text(currentWeather.conditionDescription))
             }
             
             Text(currentWeather.conditionDescription)
                 .font(.title3)
+                .minimumScaleFactor(0.8)
+                .lineLimit(2)
 
             Text("Feels like: \(currentWeather.feelsLikeTemperature.roundedUp().formatted(.measurement(width: .abbreviated, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))")
                 .font(.callout)
                 .foregroundColor(.secondary)
+                .minimumScaleFactor(0.8)
 
             // Wind Speed and Direction
             HStack {

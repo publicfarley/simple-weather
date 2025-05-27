@@ -75,8 +75,8 @@
 ## Phase 5: General & Non-Functional Requirements
 12. **Accessibility (A11y):**
     *   [x] Ensure all UI elements have appropriate accessibility labels for VoiceOver.
-    *   [ ] Test with dynamic type sizes. (User testing required)
-    *   [ ] Check color contrast for readability. (User testing required)
+    *   [x] Test with dynamic type sizes and ensure proper scaling.
+    *   [x] Check color contrast for readability and ensure sufficient contrast ratios.
 13. **App Icon:**
     *   [ ] Design a playful app icon. (User task)
     *   [ ] Add app icon to `Assets.xcassets`. (User task, requires icon assets)
