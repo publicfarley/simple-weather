@@ -70,7 +70,7 @@ struct CurrentWeatherView: View {
             
         }
         .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(.regularMaterial)
         .cornerRadius(15)
     }
 }
