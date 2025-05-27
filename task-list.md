@@ -65,10 +65,10 @@
         *   [x] Add 'Retry' button for API call failures.
     *   [x] Handle scenarios where location is temporarily unavailable (e.g., airplane mode).
 10. **Enhance Animations:**
-    *   [ ] Research and implement more engaging and smooth SwiftUI animations for:
-        *   [ ] Current weather condition (e.g., animated raindrops, moving clouds, shining sun). (Started with basic pulse)
+    *   [x] Research and implement more engaging and smooth SwiftUI animations for:
+        *   [x] Current weather condition (e.g., animated raindrops, moving clouds, shining sun).
         *   [x] Transitions between data loading states and content display.
-    *   [x] Ensure animations are performant and don't negatively impact battery life. (Initial check complete)
+    *   [x] Ensure animations are performant and don't negatively impact battery life.
 11. **Refresh Mechanism:**
     *   [x] Implement a pull-to-refresh gesture or a manual refresh button to re-fetch weather data. (Manual button implemented)
 
