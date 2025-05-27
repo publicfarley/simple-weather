@@ -3,8 +3,8 @@
 ## Phase 1: Project Setup & Core Services
 1.  **Project Initialization & Configuration:**
     *   [x] Create Xcode project (`SimpleWeather`).
-    *   [ ] Configure App ID with WeatherKit capability in Apple Developer Portal.
-    *   [ ] Add WeatherKit capability in Xcode's "Signing & Capabilities".
+    *   [x] Configure App ID with WeatherKit capability in Apple Developer Portal.
+    *   [x] Add WeatherKit capability in Xcode's "Signing & Capabilities".
     *   [x] Add `Privacy - Location When In Use Usage Description` to target's "Info" tab.
 2.  **Location Services Implementation (`LocationManager.swift`):**
     *   [x] Create `LocationManager.swift` file within a `Services` group.
