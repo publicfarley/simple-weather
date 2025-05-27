@@ -15,48 +15,56 @@ struct ContentView: View {
     @State private var errorMessage: String? = nil
 
     var body: some View {
-        VStack(spacing: 20) {
-            // Initial state: Request permission or show loading
-            if locationManager.authorizationStatus == .notDetermined {
-                requestLocationPermissionButton
-                    .transition(.opacity.animation(.easeInOut))
-            } else if locationManager.authorizationStatus == .denied {
-                deniedLocationView
-                    .transition(.opacity.animation(.easeInOut))
-            } else if locationManager.authorizationStatus == .restricted {
-                restrictedLocationView
-                    .transition(.opacity.animation(.easeInOut))
-            } else if locationManager.isLoading {
-                loadingLocationView
-                    .transition(.opacity.animation(.easeInOut))
-            } else if let locationError = locationManager.locationError,
-                      locationManager.authorizationStatus != .denied,
-                      locationManager.authorizationStatus != .restricted {
-                locationUnavailableView(error: locationError)
-                    .transition(.opacity.animation(.easeInOut))
-            } else if locationManager.location != nil {
-                // Location is available, proceed with weather
-                if weatherService.isLoadingCurrentWeather || weatherService.isLoadingForecast {
-                    loadingWeatherView
+        ZStack {
+            // Layer 1: Background Gradient (fills entire screen)
+            backgroundGradient(for: weatherService.currentWeather?.conditionSymbolName)
+                .edgesIgnoringSafeArea(.all)
+
+            // Layer 2: Main Content VStack (respects safe areas)
+            VStack(spacing: 20) {
+                // Initial state: Request permission or show loading
+                if locationManager.authorizationStatus == .notDetermined {
+                    requestLocationPermissionButton
                         .transition(.opacity.animation(.easeInOut))
-                } else if let error = weatherService.weatherError {
-                    weatherErrorView(error: error)
+                } else if locationManager.authorizationStatus == .denied {
+                    deniedLocationView
                         .transition(.opacity.animation(.easeInOut))
-                } else if let current = weatherService.currentWeather {
-                    weatherDisplayView(current: current, forecast: weatherService.dailyForecast)
+                } else if locationManager.authorizationStatus == .restricted {
+                    restrictedLocationView
                         .transition(.opacity.animation(.easeInOut))
+                } else if locationManager.isLoading {
+                    loadingLocationView
+                        .transition(.opacity.animation(.easeInOut))
+                } else if let locationError = locationManager.locationError,
+                          locationManager.authorizationStatus != .denied,
+                          locationManager.authorizationStatus != .restricted {
+                    locationUnavailableView(error: locationError)
+                        .transition(.opacity.animation(.easeInOut))
+                } else if locationManager.location != nil {
+                    // Location is available, proceed with weather
+                    if weatherService.isLoadingCurrentWeather || weatherService.isLoadingForecast {
+                        loadingWeatherView
+                            .transition(.opacity.animation(.easeInOut))
+                    } else if let error = weatherService.weatherError {
+                        weatherErrorView(error: error)
+                            .transition(.opacity.animation(.easeInOut))
+                    } else if let current = weatherService.currentWeather {
+                        weatherDisplayView(current: current, forecast: weatherService.dailyForecast)
+                            .transition(.opacity.animation(.easeInOut))
+                    } else {
+                        // Should not happen if logic is correct, but as a fallback
+                        Text("Something went wrong. Please try again.")
+                            .transition(.opacity.animation(.easeInOut))
+                    }
                 } else {
-                    // Should not happen if logic is correct, but as a fallback
-                    Text("Something went wrong. Please try again.")
+                    // Fallback for any other unhandled state
+                    Text("Unable to determine state. Please restart the app.")
                         .transition(.opacity.animation(.easeInOut))
                 }
-            } else {
-                // Fallback for any other unhandled state
-                Text("Unable to determine state. Please restart the app.")
-                    .transition(.opacity.animation(.easeInOut))
             }
+            .padding() // Padding for the content within the safe area
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // Ensure content VStack uses available space
         }
-        .padding()
         .onAppear {
             // If authorized but no location yet (e.g. app restart), try to get it.
             // If .notDetermined, the UI above will prompt for permission.
@@ -88,6 +96,36 @@ struct ContentView: View {
                 // but can be a fallback.
                 locationManager.requestLocation()
             }
+        }
+    }
+
+    // MARK: - Background Gradient Helper
+    private func backgroundGradient(for symbolName: String?) -> LinearGradient {
+        guard let symbol = symbolName else {
+            // Default gradient if no weather data
+            return LinearGradient(gradient: Gradient(colors: [Color.gray.opacity(0.3), Color.gray.opacity(0.5)]), startPoint: .top, endPoint: .bottom)
+        }
+
+        switch symbol {
+        case "sun.max.fill", "sun.min.fill", "sun.haze.fill": // Sunny variations
+            return LinearGradient(gradient: Gradient(colors: [Color.yellow.opacity(0.5), Color.orange.opacity(0.4)]), startPoint: .topLeading, endPoint: .bottomTrailing)
+        case _ where symbol.contains("cloud.sun"): // Partly cloudy
+            return LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.yellow.opacity(0.3)]), startPoint: .top, endPoint: .bottom)
+        case _ where symbol.contains("cloud.rain"), _ where symbol.contains("drizzle"), _ where symbol.contains("heavyrain"): // Rainy variations
+            return LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.indigo.opacity(0.6)]), startPoint: .top, endPoint: .bottom)
+        case _ where symbol.contains("cloud.snow"), _ where symbol.contains("snow"), _ where symbol.contains("blizzard"): // Snowy variations
+            return LinearGradient(gradient: Gradient(colors: [Color.cyan.opacity(0.4), Color.white.opacity(0.2)]), startPoint: .top, endPoint: .bottom)
+        case _ where symbol.contains("cloud.fog"), _ where symbol.contains("fog"): // Foggy
+            return LinearGradient(gradient: Gradient(colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.7)]), startPoint: .top, endPoint: .bottom)
+        case _ where symbol.contains("cloud"): // General cloudy
+            return LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.3), Color.gray.opacity(0.4)]), startPoint: .top, endPoint: .bottom)
+        case "wind":
+            return LinearGradient(gradient: Gradient(colors: [Color.teal.opacity(0.4), Color.gray.opacity(0.3)]), startPoint: .top, endPoint: .bottom)
+        // Consider night variations if time of day is available
+        // case _ where symbol.contains("moon"), _ where symbol.contains("night"): // Night clear/cloudy
+        //     return LinearGradient(gradient: Gradient(colors: [Color.indigo.opacity(0.7), Color.black.opacity(0.7)]), startPoint: .top, endPoint: .bottom)
+        default: // Fallback for other symbols
+            return LinearGradient(gradient: Gradient(colors: [Color.gray.opacity(0.4), Color.blue.opacity(0.3)]), startPoint: .top, endPoint: .bottom)
         }
     }
 
