@@ -4,22 +4,26 @@ struct ForecastView: View {
     let dailyForecasts: [DailyForecast]
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("7-Day Forecast")
-                .font(.title2)
-                .padding(.bottom, 5)
-
+        VStack(alignment: .leading, spacing: 0) {
             if dailyForecasts.isEmpty {
                 Text("Forecast data is not available.")
                     .foregroundColor(.secondary)
+                    .padding()
             } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(dailyForecasts) { forecast in
-                        DailyForecastRowView(forecast: forecast)
+                ForEach(dailyForecasts) { forecast in
+                    DailyForecastRowView(forecast: forecast)
+                    
+                    // Add a divider between rows, except after the last one
+                    if forecast.id != dailyForecasts.last?.id {
+                        Divider()
+                            .padding(.leading)
                     }
                 }
             }
         }
+        .padding(.vertical, 8)
+        .background(.regularMaterial)
+        .cornerRadius(15)
 //        .padding()
 //        .background(Color(uiColor: .secondarySystemBackground))
 //        .cornerRadius(15)

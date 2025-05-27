@@ -4,41 +4,52 @@ struct DailyForecastRowView: View {
     let forecast: DailyForecast
 
     var body: some View {
-        HStack {
+        HStack(spacing: 16) {
+            // Day of the week
             Text(forecast.date.formatted(.dateTime.weekday(.abbreviated)))
+                .font(.subheadline)
                 .frame(width: 50, alignment: .leading)
             
-            Spacer()
-            
+            // Weather icon
             Image(systemName: forecast.conditionSymbolName)
                 .symbolRenderingMode(.multicolor)
                 .font(.title3)
+                .frame(width: 30, alignment: .center)
                 .accessibilityLabel(Text(forecast.conditionDescription))
             
-            Spacer()
-            
-            Text("H: \(forecast.highTemperature.roundedUp().formatted(.measurement(width: .narrow, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))")
-            Text("L: \(forecast.lowTemperature.roundedUp().formatted(.measurement(width: .narrow, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))")
-                .foregroundColor(.secondary)
-            
-            Spacer()
-            
-            // Precipitation Chance
-            if forecast.precipitationChance > 0 {
-                HStack(spacing: 2) {
-                    Image(systemName: "drop.fill")
-                        .accessibilityHidden(true)
-                        .foregroundColor(.blue)
-                    Text("\(forecast.precipitationChance, format: .percent.precision(.fractionLength(0)))")
-                }
-                .font(.caption)
-            } else {
-                // Optional: Show empty space or a different icon if no precipitation
-                // For now, let's keep it clean and show nothing if chance is 0
-                Spacer().frame(width: 50) // Keep alignment consistent if no precip
+            // Temperature range as text
+            HStack(spacing: 4) {
+                Text("\(Int(forecast.highTemperature.value.rounded()))")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Text("•")
+                    .foregroundColor(.secondary)
+                
+                Text("\(Int(forecast.lowTemperature.value.rounded()))")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text(forecast.highTemperature.unit.symbol)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            // Always show precipitation chance
+            HStack(spacing: 4) {
+                Image(systemName: "drop.fill")
+                    .accessibilityHidden(true)
+                    .foregroundColor(forecast.precipitationChance > 0 ? .blue : .secondary)
+                    .imageScale(.small)
+                Text("\(Int(forecast.precipitationChance * 100))%")
+                    .font(.caption)
+                    .foregroundColor(forecast.precipitationChance > 0 ? .blue : .secondary)
+            }
+            .frame(width: 50, alignment: .trailing)
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }
 
