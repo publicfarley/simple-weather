@@ -6,7 +6,6 @@ struct CurrentWeatherView: View {
     
     @State private var currentTime = Date()
     @State private var timerCancellable: AnyCancellable? = nil
-    @State private var colonOpacity: Double = 1.0
     
     private var formattedTime: String {
         let formatter = DateFormatter()
@@ -51,7 +50,6 @@ struct CurrentWeatherView: View {
                 Text(":")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .opacity(colonOpacity)
                 
                 Text(minute)
                     .font(.subheadline)
@@ -66,10 +64,6 @@ struct CurrentWeatherView: View {
                 let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
                 timerCancellable = timer.sink { _ in
                     currentTime = Date()
-                    // Pulse the colon opacity
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        colonOpacity = colonOpacity == 1.0 ? 0.3 : 1.0
-                    }
                 }
             }
             .onDisappear {
