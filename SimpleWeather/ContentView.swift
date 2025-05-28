@@ -178,7 +178,13 @@ struct ContentView: View {
     }
 
     private var loadingLocationView: some View {
-        ProgressView("Fetching your location...")
+        VStack {
+            Spacer()
+            ProgressView("Fetching your location...")
+                .scaleEffect(1.5)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func locationUnavailableView(error: Error) -> some View {
@@ -198,7 +204,13 @@ struct ContentView: View {
     }
 
     private var loadingWeatherView: some View {
-        ProgressView("Fetching weather data...")
+        VStack {
+            Spacer()
+            ProgressView("Fetching weather data...")
+                .scaleEffect(1.5)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func weatherErrorView(error: Error) -> some View {
