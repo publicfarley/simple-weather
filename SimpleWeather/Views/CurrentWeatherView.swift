@@ -2,10 +2,16 @@ import SwiftUI
 
 struct CurrentWeatherView: View {
     let currentWeather: CurrentWeather
+    
+    private var formattedDateTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a z"
+        return formatter.string(from: currentWeather.date)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Now")
+            Text(formattedDateTime)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
