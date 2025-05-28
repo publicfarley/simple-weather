@@ -1,19 +1,82 @@
 import SwiftUI
+import Combine
 
 struct CurrentWeatherView: View {
     let currentWeather: CurrentWeather
     
-    private var formattedDateTime: String {
+    @State private var currentTime = Date()
+    @State private var timerCancellable: AnyCancellable? = nil
+    @State private var colonOpacity: Double = 1.0
+    
+    private var formattedTime: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a z"
-        return formatter.string(from: currentWeather.date)
+        formatter.dateFormat = "h"
+        let hour = formatter.string(from: currentTime)
+        
+        formatter.dateFormat = "mm"
+        let minute = formatter.string(from: currentTime)
+        
+        formatter.dateFormat = "a z"
+        let amPmZone = formatter.string(from: currentTime)
+        
+        return "\(hour):\(minute) \(amPmZone)"
+    }
+    
+    private var hourMinute: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h"
+        let hour = formatter.string(from: currentTime)
+        return hour
+    }
+    
+    private var minute: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "mm"
+        return formatter.string(from: currentTime)
+    }
+    
+    private var amPmZone: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "a z"
+        return formatter.string(from: currentTime)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(formattedDateTime)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            HStack(spacing: 0) {
+                Text(hourMinute)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text(":")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .opacity(colonOpacity)
+                
+                Text(minute)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text(" " + amPmZone)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .onAppear {
+                // Start the timer when the view appears
+                let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+                timerCancellable = timer.sink { _ in
+                    currentTime = Date()
+                    // Pulse the colon opacity
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        colonOpacity = colonOpacity == 1.0 ? 0.3 : 1.0
+                    }
+                }
+            }
+            .onDisappear {
+                // Cancel the timer when the view disappears
+                timerCancellable?.cancel()
+                timerCancellable = nil
+            }
 
             HStack(alignment: .center, spacing: 8) {
                 Text(currentWeather.temperature.roundedUp().formatted(.measurement(width: .abbreviated, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))))
