@@ -74,20 +74,30 @@ class WeatherService: ObservableObject {
         print("[WeatherService] getSevenDayForecast called for location: \(location.coordinate)") // DEBUG
         let weatherKitDailyForecast = try await weatherService.weather(for: location, including: .daily)
         
-        let allDailyForecasts = weatherKitDailyForecast.forecast.map { dayWeather in
-            DailyForecast(
-                date: dayWeather.date,
-                highTemperature: dayWeather.highTemperature,
-                lowTemperature: dayWeather.lowTemperature,
-                conditionSymbolName: dayWeather.symbolName,
-                conditionDescription: dayWeather.condition.description,
-                precipitationChance: dayWeather.precipitationChance
-            )
-        }
+        // Get the start of the next day
+        let calendar = Calendar.current
+        let tomorrow = calendar.startOfDay(for: Date()).addingTimeInterval(86400) // Add 24 hours to get start of next day
         
-        let sevenDayForecasts = Array(allDailyForecasts.prefix(7)) // Take the first 7 days
-        print("[WeatherService] getSevenDayForecast: Successfully mapped and trimmed to 7-day forecast.") // DEBUG
-        return sevenDayForecasts
+        // Filter out today's forecast and take the next 7 days
+        let nextSevenDaysForecasts = weatherKitDailyForecast.forecast
+            .filter { dayWeather in
+                // Only include days that are at least the start of tomorrow
+                return dayWeather.date >= tomorrow
+            }
+            .prefix(7) // Take the next 7 days
+            .map { dayWeather in
+                DailyForecast(
+                    date: dayWeather.date,
+                    highTemperature: dayWeather.highTemperature,
+                    lowTemperature: dayWeather.lowTemperature,
+                    conditionSymbolName: dayWeather.symbolName,
+                    conditionDescription: dayWeather.condition.description,
+                    precipitationChance: dayWeather.precipitationChance
+                )
+            }
+        
+        print("[WeatherService] getSevenDayForecast: Successfully mapped and trimmed to 7-day forecast starting from tomorrow.") // DEBUG
+        return Array(nextSevenDaysForecasts)
     }
 }
 
