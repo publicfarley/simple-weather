@@ -83,15 +83,11 @@ struct CurrentWeatherView: View {
     }
 }
 
-#if DEBUG
-struct CurrentWeatherView_Previews: PreviewProvider {
-    static var previews: some View {
-        CurrentWeatherView(currentWeather: previewWeatherData)
-            .padding()
-    }
-    
-    static var previewWeatherData: CurrentWeather {
-        return CurrentWeather(
+// MARK: - Previews
+
+private extension CurrentWeather {
+    static var previewData: CurrentWeather {
+        CurrentWeather(
             date: Date(),
             temperature: Measurement(value: 22, unit: .celsius),
             conditionDescription: "Mostly Sunny",
@@ -102,10 +98,35 @@ struct CurrentWeatherView_Previews: PreviewProvider {
             humidityFraction: 0.65,
             uvIndexValue: 5,
             uvIndexCategory: "Low",
-            precipitationIntensity: Measurement(value: 0.5, unit: .metersPerSecond),
+            precipitationIntensity: Measurement<UnitSpeed>(value: 0.5, unit: .metersPerSecond),
             precipitationChance: 0.1,
             pressure: Measurement(value: 1012, unit: UnitPressure.hectopascals)
         )
     }
 }
-#endif
+
+#Preview("Sunny Weather") {
+    CurrentWeatherView(currentWeather: .previewData)
+        .padding()
+}
+
+#Preview("Rainy Weather") {
+    let rainyWeather = CurrentWeather(
+        date: Date(),
+        temperature: Measurement(value: 18, unit: .celsius),
+        conditionDescription: "Heavy Rain",
+        conditionSymbolName: "cloud.rain.fill",
+        feelsLikeTemperature: Measurement(value: 16, unit: .celsius),
+        windSpeed: Measurement(value: 25, unit: .kilometersPerHour),
+        windDirection: Measurement(value: 180, unit: .degrees),
+        humidityFraction: 0.85,
+        uvIndexValue: 2,
+        uvIndexCategory: "Low",
+        precipitationIntensity: Measurement<UnitSpeed>(value: 0.0014, unit: .metersPerSecond), // ~5mm/hr
+        precipitationChance: 0.9,
+        pressure: Measurement(value: 1005, unit: UnitPressure.hectopascals)
+    )
+    
+    CurrentWeatherView(currentWeather: rainyWeather)
+        .padding()
+}

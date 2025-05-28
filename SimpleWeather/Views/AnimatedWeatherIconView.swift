@@ -199,42 +199,66 @@ struct AnimatedWeatherIconView: View {
     }
 }
 
-#if DEBUG
-struct AnimatedWeatherIconView_Previews: PreviewProvider {
-    static var previews: some View {
-        ScrollView { // Added ScrollView for many previews
-            VStack(spacing: 30) { // Increased spacing for clarity
+// MARK: - Previews
+
+#Preview("Sunny (Rotating)", traits: .sizeThatFitsLayout) {
+    VStack {
+        Text("Sunny (Rotating):").font(.headline)
+        AnimatedWeatherIconView(symbolName: "sun.max.fill")
+    }
+    .padding()
+    .background(Color.blue.opacity(0.2))
+}
+
+#Preview("Rainy (Particles)", traits: .sizeThatFitsLayout) {
+    VStack {
+        Text("Rainy (Particles):").font(.headline)
+        AnimatedWeatherIconView(symbolName: "cloud.rain.fill")
+    }
+    .padding()
+    .background(Color.blue.opacity(0.2))
+}
+
+#Preview("Snowy (Particles)", traits: .sizeThatFitsLayout) {
+    VStack {
+        Text("Snowy (Particles):").font(.headline)
+        AnimatedWeatherIconView(symbolName: "snow")
+    }
+    .padding()
+    .background(Color.blue.opacity(0.2))
+}
+
+#Preview("Windy (Pulsing)", traits: .sizeThatFitsLayout) {
+    VStack {
+        Text("Windy (Pulsing):").font(.headline)
+        AnimatedWeatherIconView(symbolName: "wind")
+    }
+    .padding()
+    .background(Color.blue.opacity(0.2))
+}
+
+#Preview("All Weather Icons", traits: .sizeThatFitsLayout) {
+    ScrollView {
+        VStack(spacing: 30) {
+            Group {
                 Text("Sunny (Rotating):").font(.headline)
                 AnimatedWeatherIconView(symbolName: "sun.max.fill")
                 Divider()
                 Text("Rainy (Particles):").font(.headline)
                 AnimatedWeatherIconView(symbolName: "cloud.rain.fill")
                 Divider()
-                Text("Drizzle (Particles):").font(.headline)
-                AnimatedWeatherIconView(symbolName: "cloud.drizzle.fill")
-                Divider()
-                Text("Heavy Rain (Particles):").font(.headline)
-                AnimatedWeatherIconView(symbolName: "cloud.heavyrain.fill")
-                Divider()
                 Text("Snowy (Particles):").font(.headline)
-                AnimatedWeatherIconView(symbolName: "snowflake") 
+                AnimatedWeatherIconView(symbolName: "snow")
                 Divider()
-                Text("Cloudy Snow (Particles):").font(.headline)
-                AnimatedWeatherIconView(symbolName: "cloud.snow.fill") 
-                Divider()
-                Text("Windy Snow (Particles):").font(.headline)
-                AnimatedWeatherIconView(symbolName: "wind.snow")
-                Divider()
-                Text("Windy (Pulsing - default):").font(.headline)
+                Text("Windy (Pulsing):").font(.headline)
                 AnimatedWeatherIconView(symbolName: "wind")
                 Divider()
-                Text("Cloudy (Pulsing - default):").font(.headline)
+                Text("Cloudy (Pulsing):").font(.headline)
                 AnimatedWeatherIconView(symbolName: "cloud.fill")
             }
             .padding()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.blue.opacity(0.2)) // Background to see white snowflakes & rain
     }
+    .frame(height: 800)
+    .background(Color.blue.opacity(0.2))
 }
-#endif

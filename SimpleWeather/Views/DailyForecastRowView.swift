@@ -66,15 +66,28 @@ struct DailyForecastRowView: View {
     }
 }
 
-#if DEBUG
-struct DailyForecastRowView_Previews: PreviewProvider {
-    static var previews: some View {
-        Group {
-            DailyForecastRowView(forecast: ForecastView_Previews.previewForecastData[0])
-            DailyForecastRowView(forecast: ForecastView_Previews.previewForecastData[1])
-        }
-        .padding()
-        .previewLayout(.sizeThatFits)
-    }
+// MARK: - Previews
+
+#Preview("Sunny Day", traits: .sizeThatFitsLayout) {
+    DailyForecastRowView(forecast: DailyForecast(
+        date: Date(),
+        highTemperature: Measurement(value: 25, unit: .celsius),
+        lowTemperature: Measurement(value: 15, unit: .celsius),
+        conditionSymbolName: "sun.max.fill",
+        conditionDescription: "Sunny",
+        precipitationChance: 0.1
+    ))
+    .padding()
 }
-#endif
+
+#Preview("Rainy Day", traits: .sizeThatFitsLayout) {
+    DailyForecastRowView(forecast: DailyForecast(
+        date: Date().addingTimeInterval(86400), // Tomorrow
+        highTemperature: Measurement(value: 18, unit: .celsius),
+        lowTemperature: Measurement(value: 12, unit: .celsius),
+        conditionSymbolName: "cloud.rain.fill",
+        conditionDescription: "Rainy",
+        precipitationChance: 0.8
+    ))
+    .padding()
+}
