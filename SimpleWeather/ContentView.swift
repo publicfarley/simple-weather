@@ -240,7 +240,7 @@ struct ContentView: View {
     private func weatherDisplayView(current: CurrentWeather, forecast: [DailyForecast]?) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                CurrentWeatherView(currentWeather: current)
+                CurrentWeatherView(currentWeather: current, location: locationManager.location)
                 if let forecast = forecast, !forecast.isEmpty {
                     ForecastView(dailyForecasts: forecast)
                         .padding(.top)

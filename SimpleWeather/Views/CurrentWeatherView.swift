@@ -1,75 +1,75 @@
 import SwiftUI
 import Combine
+import CoreLocation
 
 struct CurrentWeatherView: View {
     let currentWeather: CurrentWeather
+    var location: CLLocation?
     
-    @State private var currentTime = Date()
-    @State private var timerCancellable: AnyCancellable? = nil
-    
-    private var formattedTime: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h"
-        let hour = formatter.string(from: currentTime)
-        
-        formatter.dateFormat = "mm"
-        let minute = formatter.string(from: currentTime)
-        
-        formatter.dateFormat = "a z"
-        let amPmZone = formatter.string(from: currentTime)
-        
-        return "\(hour):\(minute) \(amPmZone)"
+    init(currentWeather: CurrentWeather, location: CLLocation? = nil) {
+        self.currentWeather = currentWeather
+        self.location = location
     }
     
-    private var hourMinute: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h"
-        let hour = formatter.string(from: currentTime)
-        return hour
-    }
+    @State private var locationName: String = "Current Location"
     
-    private var minute: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "mm"
-        return formatter.string(from: currentTime)
-    }
+    // Geocoder to convert coordinates to location name
+    private let geocoder = CLGeocoder()
     
-    private var amPmZone: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "a z"
-        return formatter.string(from: currentTime)
+    // Function to convert coordinates to location name
+    private func reverseGeocode(location: CLLocation) {
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("Reverse geocoding error: \(error.localizedDescription)")
+                    self.locationName = "Current Location"
+                    return
+                }
+                
+                if let placemark = placemarks?.first {
+                    // Format the location name based on available information
+                    if let locality = placemark.locality {
+                        // City name available
+                        self.locationName = locality
+                        
+                        // Add state/province for US/Canada locations
+                        if let administrativeArea = placemark.administrativeArea, 
+                           (placemark.country == "United States" || placemark.country == "Canada") {
+                            self.locationName += ", \(administrativeArea)"
+                        }
+                    } else if let name = placemark.name {
+                        // Use the name if locality isn't available
+                        self.locationName = name
+                    } else {
+                        // Fallback to coordinates if no readable name is available
+                        let lat = location.coordinate.latitude
+                        let lon = location.coordinate.longitude
+                        self.locationName = String(format: "%.4f, %.4f", lat, lon)
+                    }
+                } else {
+                    self.locationName = "Current Location"
+                }
+            }
+        }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 0) {
-                Text(hourMinute)
+            HStack(spacing: 4) {
+                Image(systemName: "location.fill")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
                 
-                Text(":")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                Text(minute)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                Text(" " + amPmZone)
+                Text(locationName)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
             .onAppear {
-                // Start the timer when the view appears
-                let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-                timerCancellable = timer.sink { _ in
-                    currentTime = Date()
+                // Get location name when the view appears
+                if let location = location {
+                    reverseGeocode(location: location)
                 }
-            }
-            .onDisappear {
-                // Cancel the timer when the view disappears
-                timerCancellable?.cancel()
-                timerCancellable = nil
             }
 
             HStack(alignment: .center, spacing: 8) {
