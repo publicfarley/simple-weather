@@ -16,6 +16,24 @@ struct CurrentWeatherView: View {
     // Geocoder to convert coordinates to location name
     private let geocoder = CLGeocoder()
     
+    // Function to format precipitation intensity from m/s to mm/h
+    private func formatPrecipitation(_ precipitation: Measurement<UnitSpeed>) -> String {
+        // Convert to meters per second if it's not already
+        let metersPerSecond = precipitation.converted(to: .metersPerSecond).value
+        
+        // Convert from m/s to mm/h (1 m/s = 3600 mm/h)
+        let mmPerHour = metersPerSecond * 3600
+        
+        // Format with appropriate precision
+        if mmPerHour < 0.1 {
+            return "Trace"
+        } else if mmPerHour < 1.0 {
+            return String(format: "%.1f mm/h", mmPerHour)
+        } else {
+            return String(format: "%.0f mm/h", mmPerHour)
+        }
+    }
+    
     // Function to convert coordinates to location name
     private func reverseGeocode(location: CLLocation) {
         geocoder.reverseGeocodeLocation(location) { placemarks, error in
@@ -127,7 +145,7 @@ struct CurrentWeatherView: View {
             HStack {
                 Image(systemName: "drop.fill").accessibilityHidden(true)
                 if let precipitationIntensity = currentWeather.precipitationIntensity, precipitationIntensity.value > 0 {
-                    Text("Precipitation: \(precipitationIntensity.formatted(.measurement(width: .abbreviated, usage: .general)))")
+                    Text("Precipitation: \(formatPrecipitation(precipitationIntensity))")
                 } else if let precipitationChance = currentWeather.precipitationChance, precipitationChance > 0 {
                     Text("Precipitation: \(precipitationChance, format: .percent.precision(.fractionLength(0))) chance")
                 } else {
