@@ -50,6 +50,16 @@ class WeatherService: ObservableObject {
         // isLoadingCurrentWeather and weatherError are handled by the public fetchWeather method
         let weatherKitCurrentWeather = try await weatherService.weather(for: location, including: .current)
         
+        // Get the daily forecast to ensure consistent precipitation data
+        let dailyForecast = try await weatherService.weather(for: location, including: .daily)
+        
+        // Get today's forecast
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let todayForecast = dailyForecast.forecast.first { dayWeather in
+            calendar.isDate(dayWeather.date, inSameDayAs: today)
+        }
+        
         let customCurrentWeather = CurrentWeather(
             date: weatherKitCurrentWeather.date,
             temperature: weatherKitCurrentWeather.temperature,
@@ -62,7 +72,7 @@ class WeatherService: ObservableObject {
             uvIndexValue: weatherKitCurrentWeather.uvIndex.value,
             uvIndexCategory: weatherKitCurrentWeather.uvIndex.category.description,
             precipitationIntensity: weatherKitCurrentWeather.precipitationIntensity,
-            precipitationChance: nil, 
+            precipitationChance: todayForecast?.precipitationChance, // Use today's precipitation chance from daily forecast
             pressure: weatherKitCurrentWeather.pressure 
         )
         return customCurrentWeather
@@ -74,17 +84,17 @@ class WeatherService: ObservableObject {
         print("[WeatherService] getSevenDayForecast called for location: \(location.coordinate)") // DEBUG
         let weatherKitDailyForecast = try await weatherService.weather(for: location, including: .daily)
         
-        // Get the start of the next day
+        // Get the start of the current day
         let calendar = Calendar.current
-        let tomorrow = calendar.startOfDay(for: Date()).addingTimeInterval(86400) // Add 24 hours to get start of next day
+        let today = calendar.startOfDay(for: Date())
         
-        // Filter out today's forecast and take the next 7 days
-        let nextSevenDaysForecasts = weatherKitDailyForecast.forecast
+        // Include today's forecast and take 7 days total
+        let sevenDayForecasts = weatherKitDailyForecast.forecast
             .filter { dayWeather in
-                // Only include days that are at least the start of tomorrow
-                return dayWeather.date >= tomorrow
+                // Include days starting from today
+                return dayWeather.date >= today
             }
-            .prefix(7) // Take the next 7 days
+            .prefix(7) // Take 7 days total
             .map { dayWeather in
                 DailyForecast(
                     date: dayWeather.date,
@@ -96,8 +106,8 @@ class WeatherService: ObservableObject {
                 )
             }
         
-        print("[WeatherService] getSevenDayForecast: Successfully mapped and trimmed to 7-day forecast starting from tomorrow.") // DEBUG
-        return Array(nextSevenDaysForecasts)
+        print("[WeatherService] getSevenDayForecast: Successfully mapped and trimmed to 7-day forecast starting from today.") // DEBUG
+        return Array(sevenDayForecasts)
     }
 }
 
