@@ -59,7 +59,7 @@ struct AboutView: View {
             Section(header: Text("Developer")) {
                 HStack {
                     Text("Developed by")
-                    Text("Farley Caesar")
+                    Text("Farley Caesar")   
                         .fontWeight(.medium)
                 }
                 
@@ -70,7 +70,7 @@ struct AboutView: View {
             }
             
             // Legal Section
-            Section(footer: Text("© \(Calendar.current.component(.year, from: Date())) SimpleWeather. All weather data provided by Apple Weather.")) {
+            Section(footer: Text("© \(String(format: "%d", Calendar.current.component(.year, from: Date()))) SimpleWeather. All weather data provided by Apple Weather.")) {
                 // Empty section with footer
             }
         }
