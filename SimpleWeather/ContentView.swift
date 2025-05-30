@@ -11,59 +11,88 @@ import CoreLocation
 struct ContentView: View {
     @StateObject private var locationManager = LocationManager()
     @StateObject private var weatherService = WeatherService()
+    
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var previousScenePhase: ScenePhase = .inactive
+    @State private var showingAbout = false
 
     @State private var errorMessage: String? = nil
 
     var body: some View {
-        ZStack {
-            // Layer 1: Background Gradient (fills entire screen)
-            backgroundGradient(for: weatherService.currentWeather?.conditionSymbolName)
-                .edgesIgnoringSafeArea(.all)
+        NavigationStack {
+            ZStack {
+                // Layer 1: Background Gradient (fills entire screen)
+                backgroundGradient(for: weatherService.currentWeather?.conditionSymbolName)
+                    .edgesIgnoringSafeArea(.all)
 
-            // Layer 2: Main Content VStack (respects safe areas)
-            VStack(spacing: 20) {
-                // Initial state: Request permission or show loading
-                if locationManager.authorizationStatus == .notDetermined {
-                    requestLocationPermissionButton
-                        .transition(.opacity.animation(.easeInOut))
-                } else if locationManager.authorizationStatus == .denied {
-                    deniedLocationView
-                        .transition(.opacity.animation(.easeInOut))
-                } else if locationManager.authorizationStatus == .restricted {
-                    restrictedLocationView
-                        .transition(.opacity.animation(.easeInOut))
-                } else if locationManager.isLoading {
-                    loadingLocationView
-                        .transition(.opacity.animation(.easeInOut))
-                } else if let locationError = locationManager.locationError,
-                          locationManager.authorizationStatus != .denied,
-                          locationManager.authorizationStatus != .restricted {
-                    locationUnavailableView(error: locationError)
-                        .transition(.opacity.animation(.easeInOut))
-                } else if locationManager.location != nil {
-                    // Location is available, proceed with weather
-                    if weatherService.isLoadingCurrentWeather || weatherService.isLoadingForecast {
-                        loadingWeatherView
+                // Layer 2: Main Content VStack (respects safe areas)
+                VStack(spacing: 20) {
+                    // Initial state: Request permission or show loading
+                    if locationManager.authorizationStatus == .notDetermined {
+                        requestLocationPermissionButton
                             .transition(.opacity.animation(.easeInOut))
-                    } else if let error = weatherService.weatherError {
-                        weatherErrorView(error: error)
+                    } else if locationManager.authorizationStatus == .denied {
+                        deniedLocationView
                             .transition(.opacity.animation(.easeInOut))
-                    } else if let current = weatherService.currentWeather {
-                        weatherDisplayView(current: current, forecast: weatherService.dailyForecast)
+                    } else if locationManager.authorizationStatus == .restricted {
+                        restrictedLocationView
                             .transition(.opacity.animation(.easeInOut))
+                    } else if locationManager.isLoading {
+                        loadingLocationView
+                            .transition(.opacity.animation(.easeInOut))
+                    } else if let locationError = locationManager.locationError,
+                              locationManager.authorizationStatus != .denied,
+                              locationManager.authorizationStatus != .restricted {
+                        locationUnavailableView(error: locationError)
+                            .transition(.opacity.animation(.easeInOut))
+                    } else if locationManager.location != nil {
+                        // Location is available, proceed with weather
+                        if weatherService.isLoadingCurrentWeather || weatherService.isLoadingForecast {
+                            loadingWeatherView
+                                .transition(.opacity.animation(.easeInOut))
+                        } else if let error = weatherService.weatherError {
+                            weatherErrorView(error: error)
+                                .transition(.opacity.animation(.easeInOut))
+                        } else if let current = weatherService.currentWeather {
+                            weatherDisplayView(current: current, forecast: weatherService.dailyForecast)
+                                .transition(.opacity.animation(.easeInOut))
+                        } else {
+                            // Should not happen if logic is correct, but as a fallback
+                            Text("Something went wrong. Please try again.")
+                                .transition(.opacity.animation(.easeInOut))
+                        }
                     } else {
-                        // Should not happen if logic is correct, but as a fallback
-                        Text("Something went wrong. Please try again.")
+                        // Fallback for any other unhandled state
+                        Text("Unable to determine state. Please restart the app.")
                             .transition(.opacity.animation(.easeInOut))
                     }
-                } else {
-                    // Fallback for any other unhandled state
-                    Text("Unable to determine state. Please restart the app.")
-                        .transition(.opacity.animation(.easeInOut))
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showingAbout = true
+                    }) {
+                        Image(systemName: "info.circle")
+                            .imageScale(.large)
+                            .accessibilityLabel("About")
+                    }
                 }
             }
-            .padding() // Padding for the content within the safe area
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // Ensure content VStack uses available space
+            .sheet(isPresented: $showingAbout) {
+                NavigationView {
+                    AboutView()
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") {
+                                    showingAbout = false
+                                }
+                            }
+                        }
+                }
+            }
         }
         .onAppear {
             // If authorized but no location yet (e.g. app restart), try to get it.
@@ -96,6 +125,25 @@ struct ContentView: View {
                 // but can be a fallback.
                 locationManager.requestLocation()
             }
+        }
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            if newPhase == .active && oldPhase != .active {
+                print("[ContentView] App became active, refreshing location and weather")
+                Task {
+                    // Request a new location when app comes to foreground
+                    locationManager.requestLocation()
+                    
+                    // Wait briefly for location update to complete
+                    try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                    
+                    // Then fetch weather with the updated location
+                    if let location = locationManager.location {
+                        print("[ContentView] App became active: Fetching weather for location")
+                        await weatherService.fetchWeather(for: location)
+                    }
+                }
+            }
+            previousScenePhase = newPhase
         }
     }
 
@@ -247,14 +295,22 @@ struct ContentView: View {
                 } else {
                     Text("Forecast data is currently unavailable.")
                 }
-                // Add a refresh button for weather
+                // Add a refresh button for weather and location
                 Button("Refresh Weather") {
                     Task {
+                        // First request a new location update
+                        print("[ContentView] Manual refresh: Requesting new location")
+                        locationManager.requestLocation()
+                        
+                        // Wait briefly for location update to complete
+                        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                        
+                        // Then fetch weather with the (potentially) updated location
                         if let location = locationManager.location {
-                           await weatherService.fetchWeather(for: location)
+                            print("[ContentView] Manual refresh: Fetching weather for updated location")
+                            await weatherService.fetchWeather(for: location)
                         } else {
-                            // Optionally, prompt to enable location services again or handle error
-                            print("Refresh Weather: Location not available.")
+                            print("[ContentView] Manual refresh: Location still not available after update attempt")
                         }
                     }
                 }
