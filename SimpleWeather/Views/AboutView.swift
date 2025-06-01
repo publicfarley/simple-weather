@@ -11,15 +11,20 @@ struct AboutView: View {
     }
     
     var body: some View {
-        List {
-            // App Info Section
-            Section {
+        ZStack {
+            StarfieldView()
+                .ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 20) {
+                    // App Info Section
+                    VStack {
                 VStack(alignment: .center, spacing: 20) {
                     Image(systemName: "cloud.sun.fill")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 80, height: 80)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.cyan)
                     
                     Text("SimpleWeather")
                         .font(.largeTitle)
@@ -31,51 +36,72 @@ struct AboutView: View {
                     Text("Stay informed about the weather in your area with a clean and simple interface.")
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
-                }
+                        }
                 .frame(maxWidth: .infinity)
-                .listRowInsets(EdgeInsets())
                 .padding(.vertical, 20)
-            }
+                    }
             
-            // Links Section
-            Section(header: Text("Information")) {
+                    // Links Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Information")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.bottom, 5)
                 if let url = URL(string: "https://www.apple.com/weather/") {
                     Link("Weather Data Source: Apple Weather", destination: url)
-                        .foregroundColor(.blue)
-                }
+                        .foregroundColor(.cyan)
+                        }
                 
                 if let privacyURL = URL(string: "https://www.apple.com/legal/privacy/") {
                     Link("Privacy Policy", destination: privacyURL)
-                        .foregroundColor(.blue)
-                }
+                        .foregroundColor(.cyan)
+                        }
                 
                 if let termsURL = URL(string: "https://www.apple.com/legal/internet-services/terms/site.html") {
                     Link("Terms of Use", destination: termsURL)
-                        .foregroundColor(.blue)
-                }
-            }
+                        .foregroundColor(.cyan)
+                        }
+                    }
             
-            // Developer Section
-            Section(header: Text("Developer")) {
-                HStack {
-                    Text("Developed by")
-                    Text("Farley Caesar")   
-                        .fontWeight(.medium)
-                }
+                    // Developer Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Developer")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.bottom, 5)
+                    HStack {
+                        Text("Developed by")
+                            .foregroundColor(.white)
+                        Text("Farley Caesar")   
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                    }
                 
                 if let url = URL(string: "https://github.com/yourusername/simpleweather") {
                     Link("View on GitHub", destination: url)
-                        .foregroundColor(.blue)
-                }
-            }
+                        .foregroundColor(.cyan)
+                        }
+                    }
             
-            // Legal Section
-            Section(footer: Text("© \(String(format: "%d", Calendar.current.component(.year, from: Date()))) SimpleWeather. All weather data provided by Apple Weather.")) {
+                    // Legal Section
+                    VStack {
+                        Text("© \(String(format: "%d", Calendar.current.component(.year, from: Date()))) SimpleWeather. All weather data provided by Apple Weather.")
+                            .foregroundColor(.gray)
+                            .font(.footnote)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 20)
                 // Empty section with footer
+                    }
+                }
+                .padding()
+                .background(Color.black.opacity(0.7))
+                .cornerRadius(15)
+                .padding()
             }
         }
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
+        .preferredColorScheme(.dark)
     }
 }
 
