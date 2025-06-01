@@ -4,6 +4,7 @@ import Combine
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
+    @Published var didUseCachedLocation = false
 
     @Published var location: CLLocation? = nil
     @Published var isLoading: Bool = false
@@ -17,6 +18,13 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = kCLDistanceFilterNone
         print("[LocationManager] Initialized. Authorization status: \(authorizationStatus.description)")
+        
+        // Try to load cached location first
+        if let cachedLocation = LocationCache.shared.getCachedLocation() {
+            self.location = cachedLocation
+            self.didUseCachedLocation = true
+            print("[LocationManager] Using cached location: \(cachedLocation.coordinate)")
+        }
     }
 
     func requestLocationAccess() {
@@ -27,12 +35,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         } else if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
             // If already authorized, directly request location
             print("[LocationManager] Already authorized. Requesting location.")
-            locationManager.requestLocation() // This is for a one-time location update
+            locationManager.requestLocation()
         } else {
             // Denied or restricted, isLoading should be false as we can't proceed.
             isLoading = false
             print("[LocationManager] Location access denied or restricted. Status: \(authorizationStatus.description)")
-            // Optionally, set an error or update UI to guide user to settings
         }
     }
 
@@ -45,12 +52,26 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         isLoading = false
         if let newLocation = locations.last {
-            self.location = newLocation
-            self.locationError = nil // Clear any previous error
-            print("[LocationManager] Did update locations: \(newLocation.coordinate)")
+            // If we used a cached location and the new location is significantly different, update
+            if didUseCachedLocation {
+                if let oldLocation = self.location,
+                   newLocation.distance(from: oldLocation) > 1000 { // 1km threshold
+                    updateLocation(newLocation)
+                }
+            } else {
+                updateLocation(newLocation)
+            }
         } else {
             print("[LocationManager] Did update locations: Received empty locations array.")
         }
+    }
+    
+    private func updateLocation(_ newLocation: CLLocation) {
+        self.location = newLocation
+        self.locationError = nil
+        self.didUseCachedLocation = false
+        LocationCache.shared.cacheLocation(newLocation)
+        print("[LocationManager] Updated location: \(newLocation.coordinate)")
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
@@ -72,8 +93,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 print("[LocationManager] Denied or restricted. Clearing location and stopping loading.")
                 self.location = nil
                 self.isLoading = false
-                // Optionally, set an error to inform the user they need to enable permissions in settings
-                // self.locationError = LocationError.permissionDenied // Define a custom error type if needed
             case .notDetermined:
                 print("[LocationManager] Authorization status changed to notDetermined.")
                 self.isLoading = false // Not loading yet, waiting for user prompt response
