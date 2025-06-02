@@ -6,10 +6,10 @@ struct DailyForecastRowView: View {
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             // Day of the week
-            Text(forecast.date.formatted(.dateTime.weekday(.abbreviated)))
+            Text(Calendar.current.isDateInToday(forecast.date) ? "Today" : forecast.date.formatted(.dateTime.weekday(.abbreviated)))
                 .font(.subheadline)
                 .frame(minWidth: 40, alignment: .leading)
-                .accessibilityLabel(Text(forecast.date.formatted(.dateTime.weekday(.wide))))
+                .accessibilityLabel(Text(Calendar.current.isDateInToday(forecast.date) ? "Today" : forecast.date.formatted(.dateTime.weekday(.wide))))
             
             // Weather icon
             Image(systemName: forecast.conditionSymbolName)
@@ -58,7 +58,7 @@ struct DailyForecastRowView: View {
         .padding(.vertical, 8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("""
-            \(forecast.date.formatted(.dateTime.weekday(.wide))), 
+            \(Calendar.current.isDateInToday(forecast.date) ? "Today" : forecast.date.formatted(.dateTime.weekday(.wide))),
             \(forecast.conditionDescription), 
             high of \(Int(forecast.highTemperature.value.rounded())) degrees, 
             low of \(Int(forecast.lowTemperature.value.rounded())) degrees\(forecast.precipitationChance > 0 ? ", \(Int(forecast.precipitationChance * 100))% chance of precipitation" : "")
