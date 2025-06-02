@@ -31,33 +31,38 @@ struct ContentView: View {
                     if let current = weatherService.currentWeather {
                         weatherDisplayView(current: current, forecast: weatherService.dailyForecast)
                     } else if !weatherService.isLoadingCurrentWeather && !weatherService.isLoadingForecast {
-                        Button("Refresh Weather") {
-                            Task {
-                                // Show loading immediately
-                                weatherService.isLoadingCurrentWeather = true
-                                weatherService.isLoadingForecast = true
-                                
-                                // Start a timer for minimum display time (2 seconds)
-                                let startTime = Date()
-                                
-                                // Trigger the refresh
-                                await fetchWeatherIfNeeded()
-                                
-                                // Calculate remaining time to reach 2 seconds
-                                let elapsed = Date().timeIntervalSince(startTime)
-                                let remaining = max(0, 2.0 - elapsed)
-                                
-                                // Wait if needed to ensure minimum display time
-                                if remaining > 0 {
-                                    try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+                        HStack {
+                            Spacer()
+                            Button("Refresh Weather") {
+                                Task {
+                                    // Show loading immediately
+                                    weatherService.isLoadingCurrentWeather = true
+                                    weatherService.isLoadingForecast = true
+                                    
+                                    // Start a timer for minimum display time (2 seconds)
+                                    let startTime = Date()
+                                    
+                                    // Trigger the refresh
+                                    await fetchWeatherIfNeeded()
+                                    
+                                    // Calculate remaining time to reach 2 seconds
+                                    let elapsed = Date().timeIntervalSince(startTime)
+                                    let remaining = max(0, 2.0 - elapsed)
+                                    
+                                    // Wait if needed to ensure minimum display time
+                                    if remaining > 0 {
+                                        try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+                                    }
+                                    
+                                    // Reset loading states
+                                    weatherService.isLoadingCurrentWeather = false
+                                    weatherService.isLoadingForecast = false
                                 }
-                                
-                                // Reset loading states
-                                weatherService.isLoadingCurrentWeather = false
-                                weatherService.isLoadingForecast = false
                             }
+                            .buttonStyle(.borderedProminent)
+                            Spacer()
                         }
-                        .buttonStyle(.borderedProminent)
+                        .padding(.vertical, 10)
                     } else {
                         loadingWeatherView
                     }
@@ -288,41 +293,46 @@ struct ContentView: View {
                     Text("Forecast data is currently unavailable.")
                 }
                 // Add a refresh button for weather and location
-                Button("Refresh Weather") {
-                    Task {
-                        // Show loading UI
-                        weatherService.isLoadingCurrentWeather = true
-                        weatherService.isLoadingForecast = true
+                HStack {
+                    Spacer()
+                    Button("Refresh Weather") {
+                        Task {
+                            // Show loading UI
+                            weatherService.isLoadingCurrentWeather = true
+                            weatherService.isLoadingForecast = true
 
-                        let startTime = Date()
+                            let startTime = Date()
 
-                        // Request new location update
-                        print("[ContentView] Manual refresh: Requesting new location")
-                        locationManager.requestLocation()
+                            // Request new location update
+                            print("[ContentView] Manual refresh: Requesting new location")
+                            locationManager.requestLocation()
 
-                        // Wait for 1 second to allow location update
-                        try? await Task.sleep(nanoseconds: 1_000_000_000)
+                            // Wait for 1 second to allow location update
+                            try? await Task.sleep(nanoseconds: 1_000_000_000)
 
-                        if let location = locationManager.location {
-                            print("[ContentView] Manual refresh: Fetching weather for updated location")
-                            await weatherService.fetchWeather(for: location)
-                        } else {
-                            print("[ContentView] Manual refresh: Location still not available after update attempt")
+                            if let location = locationManager.location {
+                                print("[ContentView] Manual refresh: Fetching weather for updated location")
+                                await weatherService.fetchWeather(for: location)
+                            } else {
+                                print("[ContentView] Manual refresh: Location still not available after update attempt")
+                            }
+
+                            // Enforce a 2-second minimum loading time
+                            let elapsed = Date().timeIntervalSince(startTime)
+                            let remaining = max(0, 2.0 - elapsed)
+                            if remaining > 0 {
+                                try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+                            }
+
+                            // Hide loading UI
+                            weatherService.isLoadingCurrentWeather = false
+                            weatherService.isLoadingForecast = false
                         }
-
-                        // Enforce a 2-second minimum loading time
-                        let elapsed = Date().timeIntervalSince(startTime)
-                        let remaining = max(0, 2.0 - elapsed)
-                        if remaining > 0 {
-                            try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
-                        }
-
-                        // Hide loading UI
-                        weatherService.isLoadingCurrentWeather = false
-                        weatherService.isLoadingForecast = false
                     }
+                    .buttonStyle(.bordered)
+                    Spacer()
                 }
-                .buttonStyle(.bordered)
+                .padding(.vertical, 10)
             }
         }
     }
