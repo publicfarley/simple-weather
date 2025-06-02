@@ -14,8 +14,8 @@ struct StarfieldView: View {
     @State private var stars: [Star] = []
     @State private var timer: Timer? = nil
     private let starCount = 100
-    private let minSize: CGFloat = 1
-    private let maxSize: CGFloat = 3
+    private let minSize: CGFloat = 2 // Reduced from 4 to 2
+    private let maxSize: CGFloat = 6 // Reduced from 12 to 6
     
     var body: some View {
         GeometryReader { geometry in
@@ -31,7 +31,7 @@ struct StarfieldView: View {
                 }
             }
             .onAppear {
-                // Initialize stars
+                // Initialize stars across the entire view
                 stars = (0..<starCount).map { _ in
                     createRandomStar(in: geometry.size)
                 }
@@ -51,20 +51,9 @@ struct StarfieldView: View {
     }
     
     private func createRandomStar(in size: CGSize) -> Star {
-        // Start stars near the center
-        let centerX = size.width / 2
-        let centerY = size.height / 2
-        
-        // Create a small area around the center for stars to start from
-        let startRadius: CGFloat = min(size.width, size.height) * 0.1
-        
-        // Random position within the central area
-        let randomRadius = CGFloat.random(in: 0...startRadius)
-        let randomAngle = CGFloat.random(in: 0...(2 * .pi))
-        
-        // Calculate starting position
-        let startX = centerX + randomRadius * cos(randomAngle)
-        let startY = centerY + randomRadius * sin(randomAngle)
+        // Distribute stars across the entire view
+        let startX = CGFloat.random(in: 0...size.width)
+        let startY = CGFloat.random(in: 0...size.height)
         
         // Random direction angle (determines the trajectory)
         let directionAngle = CGFloat.random(in: 0...(2 * .pi))
@@ -84,19 +73,27 @@ struct StarfieldView: View {
         let centerY = size.height / 2
         
         for i in 0..<stars.count {
-            // Move stars outward in their angle direction
-            stars[i].x += cos(stars[i].angle) * stars[i].speed
-            stars[i].y += sin(stars[i].angle) * stars[i].speed
+            // Move stars away from the center to create a 'flying outward' effect
+            let directionX = stars[i].x - centerX
+            let directionY = stars[i].y - centerY
+            let distance = sqrt(directionX * directionX + directionY * directionY)
             
-            // Increase size slightly as stars move outward to create depth effect
-            stars[i].size += 0.01
+            // Normalize direction and apply speed
+            if distance > 0 {
+                stars[i].x += (directionX / distance) * stars[i].speed
+                stars[i].y += (directionY / distance) * stars[i].speed
+            }
             
-            // Fade out stars as they approach the edges
+            // Increase size as stars get closer to center to create depth effect
+            stars[i].size += 0.03
+            
+            // Calculate distance from center
             let distanceFromCenter = sqrt(pow(stars[i].x - centerX, 2) + pow(stars[i].y - centerY, 2))
             let maxDistance = sqrt(pow(size.width / 2, 2) + pow(size.height / 2, 2))
             
+            // Fade out stars as they reach the edges
             if distanceFromCenter > maxDistance * 0.7 {
-                stars[i].opacity -= 0.01
+                stars[i].opacity -= 0.02 // Fade out faster when near edges
             }
             
             // If star goes off screen or becomes invisible, reset it at the center
