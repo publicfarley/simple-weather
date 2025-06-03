@@ -47,12 +47,15 @@ struct DailyForecastRowView: View {
                     .accessibilityHidden(true)
                     .foregroundColor(forecast.precipitationChance > 0 ? .blue : .secondary)
                     .imageScale(.small)
+                    .frame(width: 15, alignment: .center)
                 Text("\(Int(forecast.precipitationChance * 100))%")
                     .font(.caption2)
                     .foregroundColor(forecast.precipitationChance > 0 ? .blue : .secondary)
                     .lineLimit(1)
+                    .frame(width: 38, alignment: .trailing)
             }
-            .frame(minWidth: 40, alignment: .trailing)
+            .frame(width: 55, alignment: .trailing)
+            .padding(.trailing, 8)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
