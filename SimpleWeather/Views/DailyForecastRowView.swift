@@ -8,7 +8,7 @@ struct DailyForecastRowView: View {
             // Day of the week
             Text(Calendar.current.isDateInToday(forecast.date) ? "Today" : forecast.date.formatted(.dateTime.weekday(.abbreviated)))
                 .font(.subheadline)
-                .frame(minWidth: 40, alignment: .leading)
+                .frame(width: 65, alignment: .leading)
                 .accessibilityLabel(Text(Calendar.current.isDateInToday(forecast.date) ? "Today" : forecast.date.formatted(.dateTime.weekday(.wide))))
             
             // Weather icon
