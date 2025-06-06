@@ -63,17 +63,30 @@ struct LocationTabView: View {
     }
     
     private func initializeDefaultLocation() async {
-        // Check if we have a current location saved
+        // Always prioritize current location saved in storage
         if let currentLocation = locationStorage.currentLocation {
             selectedLocation = currentLocation
+            return
+        }
+        
+        // If LocationManager already has a location (from cache or previous permission), use it immediately
+        if let location = locationManager.location {
+            await updateCurrentLocationIfNeeded(location)
             return
         }
         
         // Request location permission and get current location
         locationManager.requestLocationAccess()
         
-        // Wait a moment for location to be determined
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        // Wait for location to be determined, but be more responsive
+        var waitTime = 0.0
+        let maxWaitTime = 5.0 // Maximum 5 seconds
+        let checkInterval = 0.1 // Check every 100ms
+        
+        while waitTime < maxWaitTime && locationManager.location == nil && locationManager.isLoading {
+            try? await Task.sleep(nanoseconds: UInt64(checkInterval * 1_000_000_000))
+            waitTime += checkInterval
+        }
         
         if let location = locationManager.location {
             await updateCurrentLocationIfNeeded(location)
