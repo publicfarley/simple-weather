@@ -181,7 +181,9 @@ struct WeatherContentView: View {
             VStack(alignment: .leading, spacing: 20) {
                 CurrentWeatherView(
                     currentWeather: current,
-                    location: location.isCurrentLocation ? locationManager.location : nil
+                    location: location.isCurrentLocation ? 
+                        (locationManager.location ?? CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)) :
+                        CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
                 )
                 
                 if let hourlyForecast = weatherService.hourlyForecast, !hourlyForecast.isEmpty {

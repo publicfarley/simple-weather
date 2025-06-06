@@ -4,9 +4,9 @@ import CoreLocation
 
 struct CurrentWeatherView: View {
     let currentWeather: CurrentWeather
-    var location: CLLocation?
+    let location: CLLocation
     
-    init(currentWeather: CurrentWeather, location: CLLocation? = nil) {
+    init(currentWeather: CurrentWeather, location: CLLocation) {
         self.currentWeather = currentWeather
         self.location = location
     }
@@ -40,7 +40,10 @@ struct CurrentWeatherView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     print("Reverse geocoding error: \(error.localizedDescription)")
-                    self.locationName = "Current Location"
+                    // Fallback to coordinates when geocoding fails
+                    let lat = location.coordinate.latitude
+                    let lon = location.coordinate.longitude
+                    self.locationName = String(format: "%.4f, %.4f", lat, lon)
                     return
                 }
                 
@@ -55,9 +58,19 @@ struct CurrentWeatherView: View {
                            (placemark.country == "United States" || placemark.country == "Canada") {
                             self.locationName += ", \(administrativeArea)"
                         }
+                        
+                        // Add country for all locations
+                        if let country = placemark.country {
+                            self.locationName += ", \(country)"
+                        }
                     } else if let name = placemark.name {
                         // Use the name if locality isn't available
                         self.locationName = name
+                        
+                        // Add country if available
+                        if let country = placemark.country {
+                            self.locationName += ", \(country)"
+                        }
                     } else {
                         // Fallback to coordinates if no readable name is available
                         let lat = location.coordinate.latitude
@@ -65,7 +78,10 @@ struct CurrentWeatherView: View {
                         self.locationName = String(format: "%.4f, %.4f", lat, lon)
                     }
                 } else {
-                    self.locationName = "Current Location"
+                    // Fallback to coordinates when no placemarks are found
+                    let lat = location.coordinate.latitude
+                    let lon = location.coordinate.longitude
+                    self.locationName = String(format: "%.4f, %.4f", lat, lon)
                 }
             }
         }
@@ -85,9 +101,7 @@ struct CurrentWeatherView: View {
             }
             .onAppear {
                 // Get location name when the view appears
-                if let location = location {
-                    reverseGeocode(location: location)
-                }
+                reverseGeocode(location: location)
             }
 
             HStack(alignment: .center, spacing: 8) {
@@ -188,7 +202,7 @@ private extension CurrentWeather {
 }
 
 #Preview("Sunny Weather") {
-    CurrentWeatherView(currentWeather: .previewData)
+    CurrentWeatherView(currentWeather: .previewData, location: CLLocation(latitude: 37.7749, longitude: -122.4194))
         .padding()
 }
 
@@ -210,6 +224,6 @@ private extension CurrentWeather {
         pressure: Measurement(value: 1005, unit: UnitPressure.hectopascals)
     )
     
-    CurrentWeatherView(currentWeather: rainyWeather)
+    CurrentWeatherView(currentWeather: rainyWeather, location: CLLocation(latitude: 40.7128, longitude: -74.0060))
         .padding()
 }

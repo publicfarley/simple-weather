@@ -285,7 +285,10 @@ struct ContentView: View {
     private func weatherDisplayView(current: CurrentWeather, forecast: [DailyForecast]?) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                CurrentWeatherView(currentWeather: current, location: locationManager.location)
+                CurrentWeatherView(
+                    currentWeather: current, 
+                    location: locationManager.location ?? CLLocation(latitude: 0, longitude: 0)
+                )
                 
                 if let hourlyForecast = weatherService.hourlyForecast, !hourlyForecast.isEmpty {
                     HourlyWeatherView(hourlyForecasts: hourlyForecast)
