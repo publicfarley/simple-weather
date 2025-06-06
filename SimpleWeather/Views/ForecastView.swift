@@ -43,7 +43,8 @@ private extension ForecastView {
                 lowTemperature: Measurement(value: Double.random(in: 5...15), unit: .celsius),
                 conditionSymbolName: ["sun.max.fill", "cloud.fill", "cloud.rain.fill", "cloud.snow.fill"].randomElement()!,
                 conditionDescription: ["Sunny", "Cloudy", "Rainy", "Snowy"].randomElement()!,
-                precipitationChance: Double.random(in: 0...1)
+                precipitationChance: Double.random(in: 0...1),
+                precipitationChanceToday: i == 0 ? Double.random(in: 0...0.5) : nil
             )
         }
     }

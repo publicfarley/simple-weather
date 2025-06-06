@@ -146,8 +146,8 @@ struct CurrentWeatherView: View {
                 Image(systemName: "drop.fill").accessibilityHidden(true)
                 if let precipitationIntensity = currentWeather.precipitationIntensity, precipitationIntensity.value > 0 {
                     Text("Precipitation: \(formatPrecipitation(precipitationIntensity))")
-                } else if let precipitationChance = currentWeather.precipitationChance, precipitationChance > 0 {
-                    Text("Precipitation: \(precipitationChance, format: .percent.precision(.fractionLength(0))) chance")
+                } else if let precipitationChanceToday = currentWeather.precipitationChanceToday, precipitationChanceToday > 0 {
+                    Text("Precipitation: \(precipitationChanceToday, format: .percent.precision(.fractionLength(0))) chance today")
                 } else {
                     Text("Precipitation: None expected")
                 }
@@ -181,6 +181,7 @@ private extension CurrentWeather {
             uvIndexCategory: "Low",
             precipitationIntensity: Measurement<UnitSpeed>(value: 0.5, unit: .metersPerSecond),
             precipitationChance: 0.1,
+            precipitationChanceToday: 0.25,
             pressure: Measurement(value: 1012, unit: UnitPressure.hectopascals)
         )
     }
@@ -205,6 +206,7 @@ private extension CurrentWeather {
         uvIndexCategory: "Low",
         precipitationIntensity: Measurement<UnitSpeed>(value: 0.0014, unit: .metersPerSecond), // ~5mm/hr
         precipitationChance: 0.9,
+        precipitationChanceToday: 0.75,
         pressure: Measurement(value: 1005, unit: UnitPressure.hectopascals)
     )
     

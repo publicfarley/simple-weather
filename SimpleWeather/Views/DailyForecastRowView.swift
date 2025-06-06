@@ -43,14 +43,15 @@ struct DailyForecastRowView: View {
             
             // Always show precipitation chance
             HStack(spacing: 2) {
+                let precipChance = forecast.precipitationChanceToday ?? forecast.precipitationChance
                 Image(systemName: "drop.fill")
                     .accessibilityHidden(true)
-                    .foregroundColor(forecast.precipitationChance > 0 ? .blue : .secondary)
+                    .foregroundColor(precipChance > 0 ? .blue : .secondary)
                     .imageScale(.small)
                     .frame(width: 15, alignment: .center)
-                Text("\(Int(forecast.precipitationChance * 100))%")
+                Text("\(Int(precipChance * 100))%")
                     .font(.caption2)
-                    .foregroundColor(forecast.precipitationChance > 0 ? .blue : .secondary)
+                    .foregroundColor(precipChance > 0 ? .blue : .secondary)
                     .lineLimit(1)
                     .frame(width: 38, alignment: .trailing)
             }
@@ -64,7 +65,10 @@ struct DailyForecastRowView: View {
             \(Calendar.current.isDateInToday(forecast.date) ? "Today" : forecast.date.formatted(.dateTime.weekday(.wide))),
             \(forecast.conditionDescription), 
             high of \(Int(forecast.highTemperature.value.rounded())) degrees, 
-            low of \(Int(forecast.lowTemperature.value.rounded())) degrees\(forecast.precipitationChance > 0 ? ", \(Int(forecast.precipitationChance * 100))% chance of precipitation" : "")
+            low of \(Int(forecast.lowTemperature.value.rounded())) degrees\({
+                let precipChance = forecast.precipitationChanceToday ?? forecast.precipitationChance
+                return precipChance > 0 ? ", \(Int(precipChance * 100))% chance of precipitation" : ""
+            }())
         """.replacingOccurrences(of: "  ", with: " ")))
     }
 }
@@ -78,7 +82,8 @@ struct DailyForecastRowView: View {
         lowTemperature: Measurement(value: 15, unit: .celsius),
         conditionSymbolName: "sun.max.fill",
         conditionDescription: "Sunny",
-        precipitationChance: 0.1
+        precipitationChance: 0.1,
+        precipitationChanceToday: 0.05
     ))
     .padding()
 }
@@ -90,7 +95,8 @@ struct DailyForecastRowView: View {
         lowTemperature: Measurement(value: 12, unit: .celsius),
         conditionSymbolName: "cloud.rain.fill",
         conditionDescription: "Rainy",
-        precipitationChance: 0.8
+        precipitationChance: 0.8,
+        precipitationChanceToday: nil
     ))
     .padding()
 }

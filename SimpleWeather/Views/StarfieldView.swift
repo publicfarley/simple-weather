@@ -37,9 +37,10 @@ struct StarfieldView: View {
                 }
                 
                 // Start animation
+                let size = geometry.size
                 timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
                     withAnimation {
-                        updateStars(in: geometry.size)
+                        updateStars(in: size)
                     }
                 }
             }

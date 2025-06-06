@@ -64,6 +64,10 @@ class WeatherService: ObservableObject {
             calendar.isDate(dayWeather.date, inSameDayAs: today)
         }
         
+        // Get hourly forecast to calculate precipitation chance for rest of today
+        let hourlyForecast = try await weatherService.weather(for: location, including: .hourly)
+        let precipitationChanceToday = calculatePrecipitationChanceForRestOfToday(hourlyForecast: hourlyForecast.forecast)
+        
         let customCurrentWeather = CurrentWeather(
             date: weatherKitCurrentWeather.date,
             temperature: weatherKitCurrentWeather.temperature,
@@ -77,6 +81,7 @@ class WeatherService: ObservableObject {
             uvIndexCategory: weatherKitCurrentWeather.uvIndex.category.description,
             precipitationIntensity: weatherKitCurrentWeather.precipitationIntensity,
             precipitationChance: todayForecast?.precipitationChance, // Use today's precipitation chance from daily forecast
+            precipitationChanceToday: precipitationChanceToday, // Calculated from hourly data for rest of today
             pressure: weatherKitCurrentWeather.pressure 
         )
         return customCurrentWeather
@@ -87,6 +92,10 @@ class WeatherService: ObservableObject {
         // isLoadingForecast and weatherError are handled by the public fetchWeather method
         print("[WeatherService] getSevenDayForecast called for location: \(location.coordinate)") // DEBUG
         let weatherKitDailyForecast = try await weatherService.weather(for: location, including: .daily)
+        
+        // Get hourly forecast to calculate precipitation chance for rest of today
+        let hourlyForecast = try await weatherService.weather(for: location, including: .hourly)
+        let precipitationChanceToday = calculatePrecipitationChanceForRestOfToday(hourlyForecast: hourlyForecast.forecast)
         
         // Get the start of the current day
         let calendar = Calendar.current
@@ -100,13 +109,15 @@ class WeatherService: ObservableObject {
             }
             .prefix(7) // Take 7 days total
             .map { dayWeather in
-                DailyForecast(
+                let isToday = calendar.isDate(dayWeather.date, inSameDayAs: Date())
+                return DailyForecast(
                     date: dayWeather.date,
                     highTemperature: dayWeather.highTemperature,
                     lowTemperature: dayWeather.lowTemperature,
                     conditionSymbolName: dayWeather.symbolName,
                     conditionDescription: dayWeather.condition.description,
-                    precipitationChance: dayWeather.precipitationChance
+                    precipitationChance: dayWeather.precipitationChance,
+                    precipitationChanceToday: isToday ? precipitationChanceToday : nil
                 )
             }
         
@@ -144,6 +155,26 @@ class WeatherService: ObservableObject {
         print("[WeatherService] getHourlyForecast: Successfully mapped hourly forecast for today.") // DEBUG
         return Array(todayHourlyForecasts)
     }
+    
+    // Helper method to calculate precipitation chance for the rest of today
+    private func calculatePrecipitationChanceForRestOfToday(hourlyForecast: [WeatherKit.HourWeather]) -> Double? {
+        let calendar = Calendar.current
+        let now = Date()
+        let endOfToday = calendar.dateInterval(of: .day, for: now)?.end ?? now.addingTimeInterval(86400)
+        
+        // Get hourly forecasts from now until end of today
+        let remainingHours = hourlyForecast.filter { hourWeather in
+            hourWeather.date >= now && hourWeather.date <= endOfToday
+        }
+        
+        // If no remaining hours in the day, return nil
+        guard !remainingHours.isEmpty else { return nil }
+        
+        // Calculate the maximum precipitation chance from all remaining hours
+        let maxPrecipitationChance = remainingHours.map { $0.precipitationChance }.max() ?? 0.0
+        
+        return maxPrecipitationChance
+    }
 }
 
 // MARK: - Data Models
@@ -162,6 +193,7 @@ struct CurrentWeather: Identifiable, Hashable {
     let uvIndexCategory: String // e.g., "Low", "Moderate", "High"
     let precipitationIntensity: Measurement<UnitSpeed>? // e.g., mm/hr
     let precipitationChance: Double? // 0.0 to 1.0, for the current hour/period
+    let precipitationChanceToday: Double? // 0.0 to 1.0, for the rest of today
     let pressure: Measurement<UnitPressure> 
 }
 
@@ -173,6 +205,7 @@ struct DailyForecast: Identifiable, Hashable {
     let conditionSymbolName: String
     let conditionDescription: String
     let precipitationChance: Double
+    let precipitationChanceToday: Double? // For today's row, calculated from remaining hours
 }
 
 struct HourlyForecast: Identifiable, Hashable {
