@@ -12,11 +12,92 @@ class WeatherService: ObservableObject {
     @Published var isLoadingCurrentWeather: Bool = false
     @Published var isLoadingForecast: Bool = false
     @Published var weatherError: Error? = nil
-
-    // Data models and methods will be added here
+    
+    // Cache for location-specific weather data
+    private var locationWeatherCache: [String: LocationWeatherData] = [:]
+    
+    struct LocationWeatherData {
+        let currentWeather: CurrentWeather
+        let dailyForecast: [DailyForecast]
+        let hourlyForecast: [HourlyForecast]
+        let lastUpdated: Date
+    }
 
     init() {
         // Initialization code if needed
+    }
+
+    // Method to fetch weather for a SavedLocation
+    func fetchWeather(for savedLocation: SavedLocation) async {
+        let location = CLLocation(latitude: savedLocation.latitude, longitude: savedLocation.longitude)
+        await fetchWeather(for: location)
+    }
+    
+    // Method to get cached weather data for a location
+    func getCachedWeather(for savedLocation: SavedLocation) -> LocationWeatherData? {
+        let key = locationCacheKey(for: savedLocation)
+        guard let cachedData = locationWeatherCache[key] else { return nil }
+        
+        // Check if cache is still valid (within 30 minutes)
+        let cacheValidityDuration: TimeInterval = 30 * 60 // 30 minutes
+        if Date().timeIntervalSince(cachedData.lastUpdated) > cacheValidityDuration {
+            locationWeatherCache.removeValue(forKey: key)
+            return nil
+        }
+        
+        return cachedData
+    }
+    
+    // Method to fetch weather for multiple locations concurrently
+    func fetchWeatherForMultipleLocations(_ locations: [SavedLocation]) async -> [String: LocationWeatherData] {
+        await withTaskGroup(of: (String, LocationWeatherData?).self) { group in
+            var results: [String: LocationWeatherData] = [:]
+            
+            for location in locations {
+                group.addTask {
+                    let key = self.locationCacheKey(for: location)
+                    do {
+                        let weatherData = try await self.fetchWeatherData(for: location)
+                        return (key, weatherData)
+                    } catch {
+                        print("[WeatherService] Failed to fetch weather for \(location.name): \(error)")
+                        return (key, nil)
+                    }
+                }
+            }
+            
+            for await (key, weatherData) in group {
+                if let data = weatherData {
+                    results[key] = data
+                    self.locationWeatherCache[key] = data
+                }
+            }
+            
+            return results
+        }
+    }
+    
+    nonisolated private func locationCacheKey(for location: SavedLocation) -> String {
+        return "\(location.latitude),\(location.longitude)"
+    }
+    
+    private func fetchWeatherData(for savedLocation: SavedLocation) async throws -> LocationWeatherData {
+        let location = CLLocation(latitude: savedLocation.latitude, longitude: savedLocation.longitude)
+        
+        async let current = getCurrentWeather(for: location)
+        async let forecast = getSevenDayForecast(for: location)
+        async let hourly = getHourlyForecast(for: location)
+        
+        let currentWeather = try await current
+        let dailyForecast = try await forecast
+        let hourlyForecast = try await hourly
+        
+        return LocationWeatherData(
+            currentWeather: currentWeather,
+            dailyForecast: dailyForecast,
+            hourlyForecast: hourlyForecast,
+            lastUpdated: Date()
+        )
     }
 
     // Main method for ContentView to call

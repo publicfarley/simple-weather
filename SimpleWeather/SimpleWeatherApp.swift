@@ -24,7 +24,7 @@ struct SimpleWeatherApp: App {
                         }
                     }
             } else {
-                ContentView()
+                LocationTabView()
             }
         }
     }
