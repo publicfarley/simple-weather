@@ -31,6 +31,12 @@ This document outlines the product requirements for "Animated Weather," an iOS w
             *   Automatically detect and display weather for the user's current location.
             *   Request location permission gracefully.
             *   Provide a way for the user to refresh the weather data based on their current location.
+        *   **Multiple Locations:**
+            *   Allow users to add and remove additional weather locations beyond their current location.
+            *   Maintain a persistent list of saved locations in local storage.
+            *   Provide individual weather screens for each saved location with the same weather information as the current location screen.
+            *   Display the current location weather screen as the default upon app startup.
+            *   Enable users to navigate between different location weather screens.
 
     **4.2. User Interface & User Experience (UI/UX)**
         *   **Playful Design:**
@@ -64,7 +70,6 @@ This document outlines the product requirements for "Animated Weather," an iOS w
 *   Not applicable for the initial version.
 
 **7. Future Considerations (Out of Scope for V1)**
-*   Search for weather in other locations.
 *   Hourly forecast.
 *   Weather alerts/notifications.
 *   Customizable units (Celsius/Fahrenheit).
