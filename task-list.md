@@ -83,27 +83,27 @@
 
 ## Phase 6: Multiple Locations Feature
 16. **Location Data Model & Storage:**
-    *   [ ] Create `SavedLocation` data model (name, latitude, longitude, isCurrentLocation flag).
-    *   [ ] Implement `LocationStorage` service using UserDefaults or Core Data for persistent storage.
-    *   [ ] Add methods to save, delete, and retrieve saved locations.
+    *   [x] Create `SavedLocation` data model (name, latitude, longitude, isCurrentLocation flag).
+    *   [x] Implement `LocationStorage` service using UserDefaults or Core Data for persistent storage.
+    *   [x] Add methods to save, delete, and retrieve saved locations.
 17. **Location Search & Management:**
-    *   [ ] Create `LocationSearchView` to allow users to search and add new locations.
-    *   [ ] Implement geocoding service to convert city names to coordinates.
-    *   [ ] Create `LocationListView` to display and manage saved locations.
-    *   [ ] Add delete functionality for saved locations (swipe-to-delete or edit mode).
+    *   [x] Create `LocationSearchView` to allow users to search and add new locations.
+    *   [x] Implement geocoding service to convert city names to coordinates.
+    *   [x] Create `LocationListView` to display and manage saved locations.
+    *   [x] Add delete functionality for saved locations (swipe-to-delete or edit mode).
 18. **Multi-Location Weather Service:**
-    *   [ ] Extend `WeatherService` to fetch weather for specific coordinates/locations.
-    *   [ ] Implement caching mechanism for multiple location weather data.
-    *   [ ] Add refresh functionality for individual locations.
+    *   [x] Extend `WeatherService` to fetch weather for specific coordinates/locations.
+    *   [x] Implement caching mechanism for multiple location weather data.
+    *   [x] Add refresh functionality for individual locations.
 19. **Navigation & UI Updates:**
-    *   [ ] Create `LocationTabView` or similar navigation structure to switch between locations.
-    *   [ ] Update main `ContentView` to work with selected location context.
-    *   [ ] Add location selection/management UI elements (+ button, location picker).
-    *   [ ] Ensure current location remains as default startup screen.
+    *   [x] Create `LocationTabView` or similar navigation structure to switch between locations.
+    *   [x] Update main `ContentView` to work with selected location context.
+    *   [x] Add location selection/management UI elements (+ button, location picker).
+    *   [x] Ensure current location remains as default startup screen.
 20. **Location-Specific Weather Views:**
-    *   [ ] Modify existing weather views to work with any location (not just current location).
-    *   [ ] Add location name/title display to weather screens.
-    *   [ ] Implement location-specific weather data loading and error handling.
+    *   [x] Modify existing weather views to work with any location (not just current location).
+    *   [x] Add location name/title display to weather screens.
+    *   [x] Implement location-specific weather data loading and error handling.
 
 ## Phase 7: Testing & Refinement
 21. **Testing:**
