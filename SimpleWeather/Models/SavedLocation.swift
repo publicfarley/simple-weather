@@ -8,6 +8,10 @@ struct SavedLocation: Codable, Identifiable, Equatable {
     let longitude: Double
     let isCurrentLocation: Bool
     
+    enum CodingKeys: String, CodingKey {
+        case name, latitude, longitude, isCurrentLocation
+    }
+    
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
