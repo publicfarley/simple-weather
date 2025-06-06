@@ -24,7 +24,7 @@ struct LocationTabView: View {
                     EmptyStateView()
                 }
             }
-            .navigationTitle(selectedLocation?.name ?? "SimpleWeather")
+            .navigationTitle(selectedLocation?.name.components(separatedBy: ",").first ?? selectedLocation?.name ?? "SimpleWeather")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
