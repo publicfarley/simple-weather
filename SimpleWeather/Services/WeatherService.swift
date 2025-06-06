@@ -8,6 +8,7 @@ class WeatherService: ObservableObject {
 
     @Published var currentWeather: CurrentWeather? = nil
     @Published var dailyForecast: [DailyForecast]? = nil
+    @Published var hourlyForecast: [HourlyForecast]? = nil
     @Published var isLoadingCurrentWeather: Bool = false
     @Published var isLoadingForecast: Bool = false
     @Published var weatherError: Error? = nil
@@ -26,6 +27,7 @@ class WeatherService: ObservableObject {
         weatherError = nil // Clear previous errors
         currentWeather = nil // Clear previous data
         dailyForecast = nil // Clear previous data
+        hourlyForecast = nil // Clear previous data
         defer {
             isLoadingCurrentWeather = false
             isLoadingForecast = false
@@ -34,10 +36,12 @@ class WeatherService: ObservableObject {
         do {
             async let current = getCurrentWeather(for: location)
             async let forecast = getSevenDayForecast(for: location)
+            async let hourly = getHourlyForecast(for: location)
             
             self.currentWeather = try await current
             self.dailyForecast = try await forecast
-            print("[WeatherService] fetchWeather: Successfully fetched current weather and forecast.")
+            self.hourlyForecast = try await hourly
+            print("[WeatherService] fetchWeather: Successfully fetched current weather, daily forecast, and hourly forecast.")
         } catch {
             self.weatherError = error
             print("[WeatherService] fetchWeather: Failed to fetch weather. Error: \(error.localizedDescription)")
@@ -109,6 +113,37 @@ class WeatherService: ObservableObject {
         print("[WeatherService] getSevenDayForecast: Successfully mapped and trimmed to 7-day forecast starting from today.") // DEBUG
         return Array(sevenDayForecasts)
     }
+    
+    // Internal method to fetch and map hourly forecast for today
+    private func getHourlyForecast(for location: CLLocation) async throws -> [HourlyForecast] {
+        print("[WeatherService] getHourlyForecast called for location: \(location.coordinate)") // DEBUG
+        let weatherKitHourlyForecast = try await weatherService.weather(for: location, including: .hourly)
+        
+        // Get the current time and end of today
+        let calendar = Calendar.current
+        let now = Date()
+        let endOfToday = calendar.dateInterval(of: .day, for: now)?.end ?? now.addingTimeInterval(86400)
+        
+        // Include hours from now until end of today (next 12-24 hours depending on current time)
+        let todayHourlyForecasts = weatherKitHourlyForecast.forecast
+            .filter { hourWeather in
+                // Include hours from now until end of today
+                return hourWeather.date >= now && hourWeather.date <= endOfToday
+            }
+            .prefix(12) // Limit to next 12 hours for better display
+            .map { hourWeather in
+                HourlyForecast(
+                    date: hourWeather.date,
+                    temperature: hourWeather.temperature,
+                    conditionSymbolName: hourWeather.symbolName,
+                    conditionDescription: hourWeather.condition.description,
+                    precipitationChance: hourWeather.precipitationChance
+                )
+            }
+        
+        print("[WeatherService] getHourlyForecast: Successfully mapped hourly forecast for today.") // DEBUG
+        return Array(todayHourlyForecasts)
+    }
 }
 
 // MARK: - Data Models
@@ -135,6 +170,15 @@ struct DailyForecast: Identifiable, Hashable {
     let date: Date
     let highTemperature: Measurement<UnitTemperature>
     let lowTemperature: Measurement<UnitTemperature>
+    let conditionSymbolName: String
+    let conditionDescription: String
+    let precipitationChance: Double
+}
+
+struct HourlyForecast: Identifiable, Hashable {
+    let id = UUID()
+    let date: Date
+    let temperature: Measurement<UnitTemperature>
     let conditionSymbolName: String
     let conditionDescription: String
     let precipitationChance: Double

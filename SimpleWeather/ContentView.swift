@@ -286,6 +286,11 @@ struct ContentView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 CurrentWeatherView(currentWeather: current, location: locationManager.location)
+                
+                if let hourlyForecast = weatherService.hourlyForecast, !hourlyForecast.isEmpty {
+                    HourlyWeatherView(hourlyForecasts: hourlyForecast)
+                }
+                
                 if let forecast = forecast, !forecast.isEmpty {
                     ForecastView(dailyForecasts: forecast)
                         .padding(.top)
