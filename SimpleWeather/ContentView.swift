@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var previousScenePhase: ScenePhase = .inactive
     @State private var errorMessage: String? = nil
     @State private var lastLocationUpdate = Date.distantPast
+    @State private var showingAbout = false
 
     var body: some View {
         NavigationStack {
@@ -69,16 +70,29 @@ struct ContentView: View {
                     locationUnavailableView()
                 }
             }
+            .animation(.easeInOut(duration: 0.3), value: weatherService.isLoadingCurrentWeather)
+            .animation(.easeInOut(duration: 0.3), value: locationManager.isLoading)
             .navigationTitle("SimpleWeather")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: AboutView()) {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            showingAbout = true
+                        }
+                    }) {
                         Image(systemName: "info.circle")
                             .imageScale(.large)
                             .accessibilityLabel("About")
                     }
                 }
             }
+        }
+        .fullScreenCover(isPresented: $showingAbout) {
+            AboutView(showingAbout: $showingAbout)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
         }
         .onAppear {
             // If we have a cached location, use it immediately

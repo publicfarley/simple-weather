@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct AboutView: View {
+    @Binding var showingAbout: Bool
+    @State private var animateContent = false
+    
     // Get app version and build number
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -25,17 +28,29 @@ struct AboutView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 80, height: 80)
                         .foregroundColor(.cyan)
+                        .scaleEffect(animateContent ? 1.0 : 0.5)
+                        .opacity(animateContent ? 1.0 : 0.0)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: animateContent)
                     
                     Text("SimpleWeather")
                         .font(.largeTitle)
                         .fontWeight(.bold)
+                        .opacity(animateContent ? 1.0 : 0.0)
+                        .offset(y: animateContent ? 0 : 20)
+                        .animation(.easeInOut(duration: 0.6).delay(0.2), value: animateContent)
                     
                     Text("Version \(appVersion) (\(buildNumber))")
                         .foregroundColor(.secondary)
+                        .opacity(animateContent ? 1.0 : 0.0)
+                        .offset(y: animateContent ? 0 : 20)
+                        .animation(.easeInOut(duration: 0.6).delay(0.3), value: animateContent)
                     
                     Text("Stay informed about the weather in your area with a clean and simple interface.")
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
+                        .opacity(animateContent ? 1.0 : 0.0)
+                        .offset(y: animateContent ? 0 : 20)
+                        .animation(.easeInOut(duration: 0.6).delay(0.4), value: animateContent)
                         }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
@@ -60,6 +75,9 @@ struct AboutView: View {
                             Spacer()
                         }
                     }
+                    .opacity(animateContent ? 1.0 : 0.0)
+                    .offset(y: animateContent ? 0 : 30)
+                    .animation(.easeInOut(duration: 0.6).delay(0.5), value: animateContent)
             
                     // Developer Section
                     VStack(alignment: .leading, spacing: 12) {
@@ -80,6 +98,9 @@ struct AboutView: View {
                             Spacer()
                         }
                     }
+                    .opacity(animateContent ? 1.0 : 0.0)
+                    .offset(y: animateContent ? 0 : 30)
+                    .animation(.easeInOut(duration: 0.6).delay(0.6), value: animateContent)
             
                     // Legal Section
                     VStack {
@@ -90,21 +111,42 @@ struct AboutView: View {
                             .padding(.top, 20)
                 // Empty section with footer
                     }
+                    .opacity(animateContent ? 1.0 : 0.0)
+                    .offset(y: animateContent ? 0 : 30)
+                    .animation(.easeInOut(duration: 0.6).delay(0.7), value: animateContent)
                 }
                 .padding()
                 .background(Color.black.opacity(0.7))
                 .cornerRadius(15)
                 .padding()
+                .scaleEffect(animateContent ? 1.0 : 0.9)
+                .opacity(animateContent ? 1.0 : 0.0)
+                .animation(.easeInOut(duration: 0.5), value: animateContent)
             }
         }
-        .navigationTitle("About")
-        .navigationBarTitleDisplayMode(.inline)
+        .overlay(alignment: .topTrailing) {
+            Button("Done") {
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    animateContent = false
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    showingAbout = false
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .padding()
+            .opacity(animateContent ? 1.0 : 0.0)
+            .animation(.easeInOut(duration: 0.3).delay(0.8), value: animateContent)
+        }
         .preferredColorScheme(.dark)
+        .onAppear {
+            withAnimation {
+                animateContent = true
+            }
+        }
     }
 }
 
 #Preview {
-    NavigationView {
-        AboutView()
-    }
+    AboutView(showingAbout: .constant(true))
 }

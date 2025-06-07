@@ -14,7 +14,7 @@ struct WeatherContentView: View {
     var body: some View {
         Group {
             if showingAbout {
-                AboutView()
+                AboutView(showingAbout: $showingAbout)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") {
