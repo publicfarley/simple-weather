@@ -124,20 +124,6 @@ struct AboutView: View {
                 .animation(.easeInOut(duration: 0.5), value: animateContent)
             }
         }
-        .overlay(alignment: .topTrailing) {
-            Button("Done") {
-                withAnimation(.easeInOut(duration: 0.4)) {
-                    animateContent = false
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                    showingAbout = false
-                }
-            }
-            .buttonStyle(.borderedProminent)
-            .padding()
-            .opacity(animateContent ? 1.0 : 0.0)
-            .animation(.easeInOut(duration: 0.3).delay(0.8), value: animateContent)
-        }
         .preferredColorScheme(.dark)
         .onAppear {
             withAnimation {
