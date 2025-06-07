@@ -43,43 +43,41 @@ struct AboutView: View {
             
                     // Links Section
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Information")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.bottom, 5)
-                if let url = URL(string: "https://www.apple.com/weather/") {
-                    Link("Weather Data Source: Apple Weather", destination: url)
-                        .foregroundColor(.cyan)
+                        HStack {
+                            Text("Information")
+                                .font(.subheadline)
+                                .foregroundColor(.white)
+                            Spacer()
                         }
-                
-                if let privacyURL = URL(string: "https://www.apple.com/legal/privacy/") {
-                    Link("Privacy Policy", destination: privacyURL)
-                        .foregroundColor(.cyan)
-                        }
-                
-                if let termsURL = URL(string: "https://www.apple.com/legal/internet-services/terms/site.html") {
-                    Link("Terms of Use", destination: termsURL)
-                        .foregroundColor(.cyan)
+                        .padding(.bottom, 5)
+                        
+                        HStack {
+                            if let url = URL(string: "https://www.apple.com/weather/") {
+                                Link("Weather Data Source: Apple Weather", destination: url)
+                                    .font(.caption)
+                                    .foregroundColor(.cyan)
+                            }
+                            Spacer()
                         }
                     }
             
                     // Developer Section
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Developer")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.bottom, 5)
-                    HStack {
-                        Text("Developed by")
-                            .foregroundColor(.white)
-                        Text("Farley Caesar")   
-                            .fontWeight(.medium)
-                            .foregroundColor(.white)
-                    }
-                
-                if let url = URL(string: "https://github.com/yourusername/simpleweather") {
-                    Link("View on GitHub", destination: url)
-                        .foregroundColor(.cyan)
+                        HStack {
+                            Text("Developer")
+                                .font(.subheadline)
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
+                        .padding(.bottom, 5)
+                        
+                        HStack {
+                            Text("Developed by")
+                                .foregroundColor(.white)
+                            Text("Farley Caesar")   
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                            Spacer()
                         }
                     }
             
