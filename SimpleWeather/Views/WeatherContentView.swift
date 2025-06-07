@@ -5,15 +5,24 @@ struct WeatherContentView: View {
     let location: SavedLocation
     @ObservedObject var locationManager: LocationManager
     @ObservedObject var weatherService: WeatherService
+    @Binding var showingAbout: Bool
     
     @Environment(\.scenePhase) private var scenePhase
     @State private var previousScenePhase: ScenePhase = .inactive
-    @State private var showingAbout = false
     @State private var lastRefresh = Date.distantPast
     
     var body: some View {
         Group {
-            if location.isCurrentLocation && locationManager.isLoading && !locationManager.didUseCachedLocation {
+            if showingAbout {
+                AboutView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") {
+                                showingAbout = false
+                            }
+                        }
+                    }
+            } else if location.isCurrentLocation && locationManager.isLoading && !locationManager.didUseCachedLocation {
                 loadingLocationView
             } else if weatherService.isLoadingCurrentWeather || weatherService.isLoadingForecast {
                 loadingWeatherView
@@ -49,24 +58,14 @@ struct WeatherContentView: View {
             previousScenePhase = newPhase
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { showingAbout = true }) {
-                    Image(systemName: "info.circle")
-                        .imageScale(.large)
-                        .accessibilityLabel("About")
-                }
-            }
-        }
-        .sheet(isPresented: $showingAbout) {
-            NavigationView {
-                AboutView()
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") {
-                                showingAbout = false
-                            }
-                        }
+            if !showingAbout {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingAbout = true }) {
+                        Image(systemName: "info.circle")
+                            .imageScale(.large)
+                            .accessibilityLabel("About")
                     }
+                }
             }
         }
     }
@@ -225,6 +224,7 @@ struct WeatherContentView: View {
     return WeatherContentView(
         location: sampleLocation,
         locationManager: LocationManager(),
-        weatherService: WeatherService()
+        weatherService: WeatherService(),
+        showingAbout: .constant(false)
     )
 }

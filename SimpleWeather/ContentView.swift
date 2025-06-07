@@ -14,7 +14,6 @@ struct ContentView: View {
     
     @Environment(\.scenePhase) private var scenePhase
     @State private var previousScenePhase: ScenePhase = .inactive
-    @State private var showingAbout = false
     @State private var errorMessage: String? = nil
     @State private var lastLocationUpdate = Date.distantPast
 
@@ -73,23 +72,11 @@ struct ContentView: View {
             .navigationTitle("SimpleWeather")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingAbout = true }) {
+                    NavigationLink(destination: AboutView()) {
                         Image(systemName: "info.circle")
                             .imageScale(.large)
                             .accessibilityLabel("About")
                     }
-                }
-            }
-            .sheet(isPresented: $showingAbout) {
-                NavigationView {
-                    AboutView()
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                Button("Done") {
-                                    showingAbout = false
-                                }
-                            }
-                        }
                 }
             }
         }

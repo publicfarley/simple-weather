@@ -10,6 +10,7 @@ struct LocationTabView: View {
     @State private var selectedLocation: SavedLocation?
     @State private var showingLocationList = false
     @State private var isInitialized = false
+    @State private var showingAbout = false
     
     var body: some View {
         NavigationStack {
@@ -18,7 +19,8 @@ struct LocationTabView: View {
                     WeatherContentView(
                         location: selectedLocation,
                         locationManager: locationManager,
-                        weatherService: weatherService
+                        weatherService: weatherService,
+                        showingAbout: $showingAbout
                     )
                 } else {
                     EmptyStateView()
@@ -27,19 +29,21 @@ struct LocationTabView: View {
             .navigationTitle(selectedLocation?.name.components(separatedBy: ",").first ?? selectedLocation?.name ?? "SimpleWeather")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { showingLocationList = true }) {
-                        Image(systemName: "location.circle")
-                            .imageScale(.large)
-                            .accessibilityLabel("Locations")
+                if !showingAbout {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: { showingLocationList = true }) {
+                            Image(systemName: "location.circle")
+                                .imageScale(.large)
+                                .accessibilityLabel("Locations")
+                        }
                     }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingLocationList = true }) {
-                        Image(systemName: "plus.circle")
-                            .imageScale(.large)
-                            .accessibilityLabel("Add Location")
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { showingLocationList = true }) {
+                            Image(systemName: "plus.circle")
+                                .imageScale(.large)
+                                .accessibilityLabel("Add Location")
+                        }
                     }
                 }
             }
