@@ -10,6 +10,8 @@ struct WeatherContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var previousScenePhase: ScenePhase = .inactive
     @State private var lastRefresh = Date.distantPast
+    @State private var animateCurrentWeather = false
+    @State private var animateHourlyWeather = false
     
     var body: some View {
         Group {
@@ -43,8 +45,24 @@ struct WeatherContentView: View {
                 await fetchWeatherIfNeeded()
             }
         }
+        .onChange(of: weatherService.currentWeather) { _, _ in
+            // Reset and trigger animation when weather data changes
+            animateCurrentWeather = false
+            animateHourlyWeather = false
+            withAnimation {
+                animateCurrentWeather = true
+                animateHourlyWeather = true
+            }
+        }
         .task(id: location.id) {
             await fetchWeatherIfNeeded()
+            // Trigger animation for location changes
+            animateCurrentWeather = false
+            animateHourlyWeather = false
+            withAnimation {
+                animateCurrentWeather = true
+                animateHourlyWeather = true
+            }
         }
         .refreshable {
             await refreshWeather()
@@ -92,6 +110,10 @@ struct WeatherContentView: View {
     }
     
     private func refreshWeather() async {
+        // Reset animation state for refresh
+        animateCurrentWeather = false
+        animateHourlyWeather = false
+        
         if location.isCurrentLocation {
             locationManager.requestLocation()
             // Wait briefly for location update
@@ -100,6 +122,12 @@ struct WeatherContentView: View {
         
         await fetchWeatherIfNeeded()
         lastRefresh = Date()
+        
+        // Trigger animation after refresh
+        withAnimation {
+            animateCurrentWeather = true
+            animateHourlyWeather = true
+        }
     }
     
     // MARK: - Subviews
@@ -184,6 +212,10 @@ struct WeatherContentView: View {
                         (locationManager.location ?? CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)) :
                         CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
                 )
+                .opacity(animateCurrentWeather ? 1.0 : 0.0)
+                .offset(y: animateCurrentWeather ? 0 : 30)
+                .scaleEffect(animateCurrentWeather ? 1.0 : 0.95)
+                .animation(.spring(response: 0.8, dampingFraction: 0.8).delay(0.2), value: animateCurrentWeather)
                 
                 if let hourlyForecast = weatherService.hourlyForecast, !hourlyForecast.isEmpty {
                     HourlyWeatherView(hourlyForecasts: hourlyForecast)
