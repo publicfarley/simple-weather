@@ -219,6 +219,10 @@ struct WeatherContentView: View {
                 
                 if let hourlyForecast = weatherService.hourlyForecast, !hourlyForecast.isEmpty {
                     HourlyWeatherView(hourlyForecasts: hourlyForecast)
+                        .opacity(animateHourlyWeather ? 1.0 : 0.0)
+                        .offset(y: animateHourlyWeather ? 0 : 30)
+                        .scaleEffect(animateHourlyWeather ? 1.0 : 0.95)
+                        .animation(.spring(response: 0.8, dampingFraction: 0.8).delay(0.4), value: animateHourlyWeather)
                 }
                 
                 if let forecast = forecast, !forecast.isEmpty {
