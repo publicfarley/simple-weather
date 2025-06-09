@@ -1,51 +1,49 @@
 import CoreLocation
 import Foundation
-
-struct CachedLocation: Codable {
-    let latitude: CLLocationDegrees
-    let longitude: CLLocationDegrees
-    let timestamp: Date
-    
-    var location: CLLocation {
-        CLLocation(latitude: latitude, longitude: longitude)
-    }
-    
-    init(location: CLLocation) {
-        self.latitude = location.coordinate.latitude
-        self.longitude = location.coordinate.longitude
-        self.timestamp = Date()
-    }
-    
-    var isStale: Bool {
-        // Consider cache valid for 24 hours
-        let cacheExpiration: TimeInterval = 60 * 60 * 24 // 24 hours
-        return abs(timestamp.timeIntervalSinceNow) > cacheExpiration
-    }
-}
+import SwiftData
 
 class LocationCache {
-    static let shared = LocationCache()
-    private let cacheKey = "cachedLocation"
+    private let modelContext: ModelContext
     
-    private init() {}
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+    }
     
     func cacheLocation(_ location: CLLocation) {
+        clearCache()
         let cachedLocation = CachedLocation(location: location)
-        if let encoded = try? JSONEncoder().encode(cachedLocation) {
-            UserDefaults.standard.set(encoded, forKey: cacheKey)
-        }
+        modelContext.insert(cachedLocation)
+        try? modelContext.save()
     }
     
     func getCachedLocation() -> CLLocation? {
-        guard let data = UserDefaults.standard.data(forKey: cacheKey),
-              let cachedLocation = try? JSONDecoder().decode(CachedLocation.self, from: data),
-              !cachedLocation.isStale else {
+        do {
+            let descriptor = FetchDescriptor<CachedLocation>()
+            let cachedLocations = try modelContext.fetch(descriptor)
+            
+            guard let cachedLocation = cachedLocations.first,
+                  !cachedLocation.isStale else {
+                clearCache()
+                return nil
+            }
+            
+            return cachedLocation.location
+        } catch {
+            print("Error fetching cached location: \(error)")
             return nil
         }
-        return cachedLocation.location
     }
     
     func clearCache() {
-        UserDefaults.standard.removeObject(forKey: cacheKey)
+        do {
+            let descriptor = FetchDescriptor<CachedLocation>()
+            let cachedLocations = try modelContext.fetch(descriptor)
+            for cachedLocation in cachedLocations {
+                modelContext.delete(cachedLocation)
+            }
+            try modelContext.save()
+        } catch {
+            print("Error clearing location cache: \(error)")
+        }
     }
 }

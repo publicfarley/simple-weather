@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct LocationListView: View {
-    @StateObject private var locationStorage = LocationStorage.shared
+    @Environment(LocationStorage.self) private var locationStorage
+    @Environment(LocationManager.self) private var locationManager
+    @Environment(GeocodingService.self) private var geocodingService
     @State private var showingAddLocation = false
     @Binding var selectedLocation: SavedLocation?
     @Environment(\.dismiss) private var dismiss
@@ -9,12 +11,55 @@ struct LocationListView: View {
     var body: some View {
         NavigationView {
             List {
-                if let currentLocation = locationStorage.currentLocation {
-                    Section("Current Location") {
-                        LocationRow(location: currentLocation, isSelected: selectedLocation?.id == currentLocation.id) {
-                            selectedLocation = currentLocation
-                            dismiss()
+                Section {
+                    Button(action: {
+                        Task {
+                            await useCurrentLocation()
                         }
+                    }) {
+                        HStack {
+                            Image(systemName: "location.fill")
+                                .foregroundColor(.white)
+                                .font(.system(size: 16, weight: .semibold))
+                                .frame(width: 28, height: 28)
+                                .background(Color.blue)
+                                .clipShape(Circle())
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Use Current Location")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Always shows weather for your current location")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            if selectedLocation?.isCurrentLocation == true {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                                    .font(.headline)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                } header: {
+                    Text("Current Location")
+                } footer: {
+                    Text("This is the recommended option for most accurate weather information.")
+                }
+                
+                if let currentLocation = locationStorage.currentLocation {
+                    Section("Detected Location") {
+                        LocationRow(location: currentLocation, isSelected: false) {
+                            // This shows the detected location but doesn't allow selection
+                            // Users should use the "Use Current Location" button above
+                        }
+                        .disabled(true)
+                        .opacity(0.7)
                     }
                 }
                 
@@ -27,14 +72,6 @@ struct LocationListView: View {
                             }
                         }
                         .onDelete(perform: deleteLocations)
-                    }
-                }
-                
-                if locationStorage.savedLocations.isEmpty {
-                    Section {
-                        Text("No saved locations")
-                            .foregroundColor(.secondary)
-                            .italic()
                     }
                 }
             }
@@ -58,6 +95,44 @@ struct LocationListView: View {
         }
         .sheet(isPresented: $showingAddLocation) {
             LocationSearchView()
+        }
+    }
+    
+    private func useCurrentLocation() async {
+        // Request fresh current location
+        locationManager.requestLocation()
+        
+        // Wait briefly for location update
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        
+        if let location = locationManager.location {
+            do {
+                let locationName = try await geocodingService.reverseGeocode(coordinate: location.coordinate)
+                let currentLocation = SavedLocation(
+                    name: locationName,
+                    coordinate: location.coordinate,
+                    isCurrentLocation: true
+                )
+                
+                locationStorage.updateCurrentLocation(currentLocation)
+                selectedLocation = currentLocation
+                dismiss()
+            } catch {
+                print("Failed to reverse geocode current location: \(error)")
+                // Create a fallback current location
+                let fallbackLocation = SavedLocation(
+                    name: "Current Location",
+                    coordinate: location.coordinate,
+                    isCurrentLocation: true
+                )
+                locationStorage.updateCurrentLocation(fallbackLocation)
+                selectedLocation = fallbackLocation
+                dismiss()
+            }
+        } else if let currentLocation = locationStorage.currentLocation {
+            // Use cached current location if GPS fails
+            selectedLocation = currentLocation
+            dismiss()
         }
     }
     

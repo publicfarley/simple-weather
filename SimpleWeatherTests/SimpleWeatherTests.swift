@@ -7,6 +7,7 @@
 
 import Testing
 import CoreLocation
+import SwiftData
 @testable import SimpleWeather
 
 // MARK: - LocationManager Tests
@@ -14,8 +15,12 @@ import CoreLocation
 struct LocationManagerTests {
     
     @Test("LocationManager initialization")
-    func locationManagerInitialization() {
-        let locationManager = LocationManager()
+    @MainActor
+    func locationManagerInitialization() throws {
+        let container = try ModelContainer(for: SavedLocation.self, CachedLocation.self, 
+                                         configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let locationCache = LocationCache(modelContext: container.mainContext)
+        let locationManager = LocationManager(locationCache: locationCache)
         
         #expect(locationManager.location == nil || locationManager.didUseCachedLocation == true)
         #expect(locationManager.isLoading == false)
@@ -61,6 +66,94 @@ struct LocationCacheTests {
         let mockOldCachedLocation = MockCachedLocation(timestamp: oldTimestamp)
         #expect(mockOldCachedLocation.isStale == true)
     }
+    
+    @Test("LocationCache SwiftData operations")
+    @MainActor
+    func locationCacheSwiftDataOperations() throws {
+        let container = try ModelContainer(for: SavedLocation.self, CachedLocation.self, 
+                                         configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let locationCache = LocationCache(modelContext: container.mainContext)
+        
+        let testLocation = CLLocation(latitude: 40.7128, longitude: -74.0060) // New York
+        
+        // Initially no cached location
+        #expect(locationCache.getCachedLocation() == nil)
+        
+        // Cache a location
+        locationCache.cacheLocation(testLocation)
+        
+        // Retrieve cached location
+        let cachedLocation = locationCache.getCachedLocation()
+        #expect(cachedLocation != nil)
+        #expect(cachedLocation?.coordinate.latitude == testLocation.coordinate.latitude)
+        #expect(cachedLocation?.coordinate.longitude == testLocation.coordinate.longitude)
+        
+        // Clear cache
+        locationCache.clearCache()
+        #expect(locationCache.getCachedLocation() == nil)
+    }
+}
+
+// MARK: - LocationStorage Tests
+@Suite("LocationStorage Tests")
+struct LocationStorageTests {
+    
+    @Test("LocationStorage basic operations")
+    @MainActor
+    func locationStorageBasicOperations() throws {
+        let container = try ModelContainer(for: SavedLocation.self, CachedLocation.self, 
+                                         configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let locationStorage = LocationStorage(modelContext: container.mainContext)
+        
+        let coordinate = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194) // San Francisco
+        let location = SavedLocation(name: "San Francisco", coordinate: coordinate, isCurrentLocation: false)
+        
+        // Initially no saved locations
+        #expect(locationStorage.savedLocations.isEmpty)
+        
+        // Save a location
+        locationStorage.saveLocation(location)
+        #expect(locationStorage.savedLocations.count == 1)
+        #expect(locationStorage.savedLocations.first?.name == "San Francisco")
+        
+        // Remove the location
+        locationStorage.removeLocation(location)
+        #expect(locationStorage.savedLocations.isEmpty)
+    }
+    
+    @Test("LocationStorage current location handling")
+    @MainActor
+    func locationStorageCurrentLocationHandling() throws {
+        let container = try ModelContainer(for: SavedLocation.self, CachedLocation.self, 
+                                         configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let locationStorage = LocationStorage(modelContext: container.mainContext)
+        
+        let coordinate = CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278) // London
+        let currentLocation = SavedLocation(name: "Current Location", coordinate: coordinate, isCurrentLocation: true)
+        let savedLocation = SavedLocation(name: "London", coordinate: coordinate, isCurrentLocation: false)
+        
+        // Add locations
+        locationStorage.saveLocation(currentLocation)
+        locationStorage.saveLocation(savedLocation)
+        
+        // Check current location and other locations
+        #expect(locationStorage.currentLocation?.name == "Current Location")
+        #expect(locationStorage.otherLocations.count == 1)
+        #expect(locationStorage.otherLocations.first?.name == "London")
+        
+        // Update current location
+        let newCoordinate = CLLocationCoordinate2D(latitude: 48.8566, longitude: 2.3522) // Paris
+        let newCurrentLocation = SavedLocation(name: "Paris", coordinate: newCoordinate, isCurrentLocation: true)
+        locationStorage.updateCurrentLocation(newCurrentLocation)
+        
+        #expect(locationStorage.currentLocation?.name == "Paris")
+        // After updating current location, there should be:
+        // 1. The new current location (Paris)
+        // 2. The old current location (now not current)
+        // 3. The saved London location
+        // So otherLocations should have 2 items now
+        #expect(locationStorage.otherLocations.count == 2)
+    }
 }
 
 // MARK: - SavedLocation Tests
@@ -104,25 +197,30 @@ struct SavedLocationTests {
         #expect(location1 == location1)
     }
     
-    @Test("SavedLocation Codable conformance")
-    func savedLocationCodableConformance() throws {
+    @Test("SavedLocation SwiftData persistence")
+    @MainActor
+    func savedLocationSwiftDataPersistence() throws {
+        let container = try ModelContainer(for: SavedLocation.self, CachedLocation.self, 
+                                         configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = container.mainContext
+        
         let coordinate = CLLocationCoordinate2D(latitude: 55.7558, longitude: 37.6176) // Moscow
         let originalLocation = SavedLocation(name: "Moscow", coordinate: coordinate, isCurrentLocation: true)
         
-        // Encode
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(originalLocation)
+        // Save to SwiftData
+        context.insert(originalLocation)
+        try context.save()
         
-        // Decode
-        let decoder = JSONDecoder()
-        let decodedLocation = try decoder.decode(SavedLocation.self, from: data)
+        // Fetch from SwiftData
+        let descriptor = FetchDescriptor<SavedLocation>()
+        let savedLocations = try context.fetch(descriptor)
         
-        #expect(decodedLocation.name == originalLocation.name)
-        #expect(decodedLocation.latitude == originalLocation.latitude)
-        #expect(decodedLocation.longitude == originalLocation.longitude)
-        #expect(decodedLocation.isCurrentLocation == originalLocation.isCurrentLocation)
-        // Note: ID is not coded, so it will be different
-        #expect(decodedLocation.id != originalLocation.id)
+        #expect(savedLocations.count == 1)
+        let retrievedLocation = savedLocations.first!
+        #expect(retrievedLocation.name == "Moscow")
+        #expect(retrievedLocation.latitude == 55.7558)
+        #expect(retrievedLocation.longitude == 37.6176)
+        #expect(retrievedLocation.isCurrentLocation == true)
     }
 }
 

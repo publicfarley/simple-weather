@@ -1,12 +1,11 @@
 import Foundation
 import CoreLocation
 
-class GeocodingService: ObservableObject {
-    static let shared = GeocodingService()
-    
+@Observable
+class GeocodingService {
     private let geocoder = CLGeocoder()
     
-    private init() {}
+    init() {}
     
     func searchLocations(for query: String) async throws -> [SavedLocation] {
         return try await withCheckedThrowingContinuation { continuation in

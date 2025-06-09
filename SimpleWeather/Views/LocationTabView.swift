@@ -2,10 +2,11 @@ import SwiftUI
 import CoreLocation
 
 struct LocationTabView: View {
-    @StateObject private var locationManager = LocationManager()
+    @Environment(LocationManager.self) private var locationManager
+    @Environment(LocationStorage.self) private var locationStorage
+    @Environment(GeocodingService.self) private var geocodingService
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var weatherService = WeatherService()
-    @StateObject private var locationStorage = LocationStorage.shared
-    @StateObject private var geocodingService = GeocodingService.shared
     
     @State private var selectedLocation: SavedLocation?
     @State private var showingLocationList = false
@@ -64,22 +65,23 @@ struct LocationTabView: View {
                 }
             }
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active && isInitialized {
+                Task {
+                    await ensureCurrentLocationIsDefault()
+                }
+            }
+        }
     }
     
     private func initializeDefaultLocation() async {
-        // Always prioritize current location saved in storage
-        if let currentLocation = locationStorage.currentLocation {
-            selectedLocation = currentLocation
-            return
-        }
-        
-        // If LocationManager already has a location (from cache or previous permission), use it immediately
+        // Always try to get current location first from GPS
         if let location = locationManager.location {
             await updateCurrentLocationIfNeeded(location)
             return
         }
         
-        // Request location permission and get current location
+        // Request fresh location permission and get current location
         locationManager.requestLocationAccess()
         
         // Wait for location to be determined, but be more responsive
@@ -94,6 +96,27 @@ struct LocationTabView: View {
         
         if let location = locationManager.location {
             await updateCurrentLocationIfNeeded(location)
+        } else {
+            // Only fallback to saved current location if GPS fails
+            if let currentLocation = locationStorage.currentLocation {
+                selectedLocation = currentLocation
+            }
+        }
+    }
+    
+    private func ensureCurrentLocationIsDefault() async {
+        // Always refresh to current location when app becomes active
+        locationManager.requestLocation()
+        
+        // Wait briefly for location update
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        
+        if let location = locationManager.location {
+            await updateCurrentLocationIfNeeded(location)
+            // Always set current location as selected when app becomes active
+            if let currentLocation = locationStorage.currentLocation {
+                selectedLocation = currentLocation
+            }
         }
     }
     
@@ -108,10 +131,8 @@ struct LocationTabView: View {
             
             locationStorage.updateCurrentLocation(currentLocation)
             
-            // Update selected location if it's the current location or if no location is selected
-            if selectedLocation?.isCurrentLocation == true || selectedLocation == nil {
-                selectedLocation = currentLocation
-            }
+            // Always update selected location to current location
+            selectedLocation = currentLocation
         } catch {
             print("Failed to reverse geocode current location: \(error)")
             // Create a fallback current location
@@ -122,9 +143,7 @@ struct LocationTabView: View {
             )
             locationStorage.updateCurrentLocation(fallbackLocation)
             
-            if selectedLocation?.isCurrentLocation == true || selectedLocation == nil {
-                selectedLocation = fallbackLocation
-            }
+            selectedLocation = fallbackLocation
         }
     }
 }

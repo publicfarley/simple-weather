@@ -7,10 +7,17 @@
 
 import SwiftUI
 import CoreLocation
+import SwiftData
 
 struct ContentView: View {
-    @StateObject private var locationManager = LocationManager()
+    @State private var locationManager: LocationManager
     @StateObject private var weatherService = WeatherService()
+    
+    init() {
+        let container = try! ModelContainer(for: SavedLocation.self, CachedLocation.self)
+        let locationCache = LocationCache(modelContext: container.mainContext)
+        self._locationManager = State(wrappedValue: LocationManager(locationCache: locationCache))
+    }
     
     @Environment(\.scenePhase) private var scenePhase
     @State private var previousScenePhase: ScenePhase = .inactive

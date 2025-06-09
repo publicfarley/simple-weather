@@ -1,39 +1,55 @@
 import Foundation
+import SwiftData
 
-class LocationStorage: ObservableObject {
-    static let shared = LocationStorage()
+@Observable
+class LocationStorage {
+    private let modelContext: ModelContext
     
-    @Published var savedLocations: [SavedLocation] = []
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+    }
     
-    private let userDefaults = UserDefaults.standard
-    private let savedLocationsKey = "SavedLocations"
-    
-    private init() {
-        loadSavedLocations()
+    var savedLocations: [SavedLocation] {
+        do {
+            let descriptor = FetchDescriptor<SavedLocation>()
+            let allLocations = try modelContext.fetch(descriptor)
+            return allLocations.sorted { $0.isCurrentLocation && !$1.isCurrentLocation }
+        } catch {
+            print("Error fetching saved locations: \(error)")
+            return []
+        }
     }
     
     func saveLocation(_ location: SavedLocation) {
-        if !savedLocations.contains(location) {
-            savedLocations.append(location)
-            persistLocations()
+        let existingLocations = savedLocations
+        if !existingLocations.contains(where: { $0.id == location.id }) {
+            modelContext.insert(location)
+            try? modelContext.save()
         }
     }
     
     func removeLocation(_ location: SavedLocation) {
-        savedLocations.removeAll { $0.id == location.id }
-        persistLocations()
+        modelContext.delete(location)
+        try? modelContext.save()
     }
     
     func removeLocation(at index: Int) {
-        guard index < savedLocations.count else { return }
-        savedLocations.remove(at: index)
-        persistLocations()
+        let locations = savedLocations
+        guard index < locations.count else { return }
+        let location = locations[index]
+        modelContext.delete(location)
+        try? modelContext.save()
     }
     
     func updateCurrentLocation(_ location: SavedLocation) {
-        savedLocations.removeAll { $0.isCurrentLocation }
-        savedLocations.insert(location, at: 0)
-        persistLocations()
+        let currentLocations = savedLocations.filter { $0.isCurrentLocation }
+        for currentLocation in currentLocations {
+            currentLocation.isCurrentLocation = false
+        }
+        
+        location.isCurrentLocation = true
+        modelContext.insert(location)
+        try? modelContext.save()
     }
     
     var currentLocation: SavedLocation? {
@@ -42,18 +58,5 @@ class LocationStorage: ObservableObject {
     
     var otherLocations: [SavedLocation] {
         savedLocations.filter { !$0.isCurrentLocation }
-    }
-    
-    private func persistLocations() {
-        if let encoded = try? JSONEncoder().encode(savedLocations) {
-            userDefaults.set(encoded, forKey: savedLocationsKey)
-        }
-    }
-    
-    private func loadSavedLocations() {
-        if let data = userDefaults.data(forKey: savedLocationsKey),
-           let locations = try? JSONDecoder().decode([SavedLocation].self, from: data) {
-            savedLocations = locations
-        }
     }
 }

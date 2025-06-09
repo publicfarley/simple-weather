@@ -2,16 +2,19 @@ import Foundation
 import CoreLocation
 import Combine
 
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+@Observable
+class LocationManager: NSObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
-    @Published var didUseCachedLocation = false
+    private let locationCache: LocationCache
+    var didUseCachedLocation = false
 
-    @Published var location: CLLocation? = nil
-    @Published var isLoading: Bool = false
-    @Published var authorizationStatus: CLAuthorizationStatus
-    @Published var locationError: Error? = nil
+    var location: CLLocation? = nil
+    var isLoading: Bool = false
+    var authorizationStatus: CLAuthorizationStatus
+    var locationError: Error? = nil
 
-    override init() {
+    init(locationCache: LocationCache) {
+        self.locationCache = locationCache
         authorizationStatus = locationManager.authorizationStatus
         super.init()
         locationManager.delegate = self
@@ -20,7 +23,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         print("[LocationManager] Initialized. Authorization status: \(authorizationStatus.description)")
         
         // Try to load cached location first
-        if let cachedLocation = LocationCache.shared.getCachedLocation() {
+        if let cachedLocation = locationCache.getCachedLocation() {
             self.location = cachedLocation
             self.didUseCachedLocation = true
             print("[LocationManager] Using cached location: \(cachedLocation.coordinate)")
@@ -70,7 +73,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         self.location = newLocation
         self.locationError = nil
         self.didUseCachedLocation = false
-        LocationCache.shared.cacheLocation(newLocation)
+        locationCache.cacheLocation(newLocation)
         print("[LocationManager] Updated location: \(newLocation.coordinate)")
     }
 

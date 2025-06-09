@@ -2,8 +2,8 @@ import SwiftUI
 
 struct LocationSearchView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var geocodingService = GeocodingService.shared
-    @StateObject private var locationStorage = LocationStorage.shared
+    @Environment(GeocodingService.self) private var geocodingService
+    @Environment(LocationStorage.self) private var locationStorage
     
     @State private var searchText = ""
     @State private var searchResults: [SavedLocation] = []

@@ -1,9 +1,10 @@
 import SwiftUI
 import CoreLocation
+import SwiftData
 
 struct WeatherContentView: View {
     let location: SavedLocation
-    @ObservedObject var locationManager: LocationManager
+    var locationManager: LocationManager
     @ObservedObject var weatherService: WeatherService
     @Binding var showingAbout: Bool
     
@@ -257,9 +258,13 @@ struct WeatherContentView: View {
         coordinate: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060)
     )
     
-    return WeatherContentView(
+    let container = try! ModelContainer(for: SavedLocation.self, CachedLocation.self)
+    let locationCache = LocationCache(modelContext: container.mainContext)
+    let locationManager = LocationManager(locationCache: locationCache)
+    
+    WeatherContentView(
         location: sampleLocation,
-        locationManager: LocationManager(),
+        locationManager: locationManager,
         weatherService: WeatherService(),
         showingAbout: .constant(false)
     )
