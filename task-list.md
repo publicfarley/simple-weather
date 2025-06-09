@@ -110,9 +110,9 @@
     *   [ ] Manually test on different devices/simulators and iOS versions.
     *   [ ] Test edge cases (no internet, location off, slow network).
     *   [ ] Verify accessibility features on actual devices with different text size and VoiceOver settings.
-    *   [ ] (Optional) Write Unit Tests for `LocationManager` and `WeatherService` logic.
-    *   [ ] (Optional) Write UI Tests for key user flows.
-    *   [ ] Test multiple locations functionality (adding, removing, switching between locations).
+    *   [x] (Optional) Write Unit Tests for `LocationManager` and `WeatherService` logic.
+    *   [x] (Optional) Write UI Tests for key user flows.
+    *   [x] Test multiple locations functionality (adding, removing, switching between locations).
 22. **App Store Preparation:**
     *   [ ] Prepare screenshots.
     *   [ ] Write app description.
