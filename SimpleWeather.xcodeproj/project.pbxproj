@@ -53,11 +53,6 @@
 			path = SimpleWeatherTests;
 			sourceTree = "<group>";
 		};
-		B4D3482B2DE5682800C97B9B /* SimpleWeatherUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SimpleWeatherUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,7 +85,6 @@
 			children = (
 				B4D348132DE5682700C97B9B /* SimpleWeather */,
 				B4D348212DE5682800C97B9B /* SimpleWeatherTests */,
-				B4D3482B2DE5682800C97B9B /* SimpleWeatherUITests */,
 				B4D348122DE5682700C97B9B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -166,9 +160,6 @@
 			dependencies = (
 				B4D3482A2DE5682800C97B9B /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				B4D3482B2DE5682800C97B9B /* SimpleWeatherUITests */,
-			);
 			name = SimpleWeatherUITests;
 			packageProductDependencies = (
 			);
@@ -195,7 +186,6 @@
 					};
 					B4D348272DE5682800C97B9B = {
 						CreatedOnToolsVersion = 16.3;
-						TestTargetID = B4D348102DE5682700C97B9B;
 					};
 				};
 			};
@@ -517,10 +507,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = functioncraft.SimpleWeatherUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = SimpleWeather;
 			};
 			name = Debug;
 		};
@@ -534,10 +524,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = functioncraft.SimpleWeatherUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = SimpleWeather;
 			};
 			name = Release;
 		};
