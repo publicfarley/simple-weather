@@ -4,19 +4,25 @@ import SwiftData
 @Observable
 class LocationStorage {
     private let modelContext: ModelContext
+    private var _savedLocations: [SavedLocation] = []
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
+        refreshLocations()
     }
     
     var savedLocations: [SavedLocation] {
+        return _savedLocations
+    }
+    
+    private func refreshLocations() {
         do {
             let descriptor = FetchDescriptor<SavedLocation>()
             let allLocations = try modelContext.fetch(descriptor)
-            return allLocations.sorted { $0.isCurrentLocation && !$1.isCurrentLocation }
+            _savedLocations = allLocations.sorted { $0.isCurrentLocation && !$1.isCurrentLocation }
         } catch {
             print("Error fetching saved locations: \(error)")
-            return []
+            _savedLocations = []
         }
     }
     
@@ -25,12 +31,14 @@ class LocationStorage {
         if !existingLocations.contains(where: { $0.id == location.id }) {
             modelContext.insert(location)
             try? modelContext.save()
+            refreshLocations()
         }
     }
     
     func removeLocation(_ location: SavedLocation) {
         modelContext.delete(location)
         try? modelContext.save()
+        refreshLocations()
     }
     
     func removeLocation(at index: Int) {
@@ -39,6 +47,7 @@ class LocationStorage {
         let location = locations[index]
         modelContext.delete(location)
         try? modelContext.save()
+        refreshLocations()
     }
     
     func updateCurrentLocation(_ location: SavedLocation) {
@@ -50,6 +59,7 @@ class LocationStorage {
         location.isCurrentLocation = true
         modelContext.insert(location)
         try? modelContext.save()
+        refreshLocations()
     }
     
     var currentLocation: SavedLocation? {
