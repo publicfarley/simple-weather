@@ -86,6 +86,27 @@ struct CurrentWeatherView: View {
             }
         }
     }
+    
+    // Function to determine icon color based on symbol name
+    private func iconColor(for symbolName: String) -> Color {
+        let lowercased = symbolName.lowercased()
+        if lowercased.contains("sun") {
+            // Pastel yellow
+            return Color(red: 1.0, green: 0.98, blue: 0.73)
+        } else if lowercased.contains("rain") || lowercased.contains("drizzle") || lowercased.contains("shower") {
+            // Pastel blue
+            return Color(red: 0.66, green: 0.82, blue: 1.0)
+        } else if lowercased.contains("snow") || lowercased.contains("sleet") || lowercased.contains("ice") {
+            // Pastel cyan
+            return Color(red: 0.85, green: 1.0, blue: 0.98)
+        } else if lowercased.contains("cloud") || lowercased.contains("fog") || lowercased.contains("mist") {
+            // Pastel gray
+            return Color(red: 0.88, green: 0.91, blue: 0.93)
+        } else {
+            // Gentle pastel off-white
+            return Color(red: 0.97, green: 0.97, blue: 1.0)
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -114,6 +135,8 @@ struct CurrentWeatherView: View {
                 
                 AnimatedWeatherIconView(symbolName: currentWeather.conditionSymbolName)
                     .font(.system(size: 50))
+                    .foregroundColor(iconColor(for: currentWeather.conditionSymbolName))
+                    .shadow(color: Color.black.opacity(0.18), radius: 4, x: 0, y: 2)
                     .minimumScaleFactor(0.5)
                     .accessibilityLabel(Text(currentWeather.conditionDescription))
             }
@@ -227,3 +250,4 @@ private extension CurrentWeather {
     CurrentWeatherView(currentWeather: rainyWeather, location: CLLocation(latitude: 40.7128, longitude: -74.0060))
         .padding()
 }
+
