@@ -51,7 +51,8 @@ struct HourlyForecastItemView: View {
             
             // Weather icon
             Image(systemName: forecast.conditionSymbolName)
-                .symbolRenderingMode(.multicolor)
+                .symbolRenderingMode(.monochrome)
+                .foregroundColor(.secondary)
                 .font(.title2)
                 .frame(height: 30)
                 .accessibilityLabel(Text(forecast.conditionDescription))

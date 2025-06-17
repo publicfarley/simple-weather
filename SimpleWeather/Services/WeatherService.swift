@@ -153,7 +153,7 @@ class WeatherService: ObservableObject {
             date: weatherKitCurrentWeather.date,
             temperature: weatherKitCurrentWeather.temperature,
             conditionDescription: weatherKitCurrentWeather.condition.description,
-            conditionSymbolName: weatherKitCurrentWeather.symbolName,
+            conditionSymbolName: filledSymbolName(for: weatherKitCurrentWeather.symbolName),
             feelsLikeTemperature: weatherKitCurrentWeather.apparentTemperature,
             windSpeed: weatherKitCurrentWeather.wind.speed,
             windDirection: weatherKitCurrentWeather.wind.direction,
@@ -296,4 +296,51 @@ struct HourlyForecast: Identifiable, Hashable {
     let conditionSymbolName: String
     let conditionDescription: String
     let precipitationChance: Double
+}
+
+// MARK: - Symbol Name Utilities
+
+private func filledSymbolName(for symbolName: String) -> String {
+    // Map common WeatherKit symbol names to their filled variants
+    switch symbolName {
+    case "sun.max":
+        return "sun.max.fill"
+    case "sun.min":
+        return "sun.min.fill"
+    case "cloud":
+        return "cloud.fill"
+    case "cloud.sun":
+        return "cloud.sun.fill"
+    case "cloud.moon":
+        return "cloud.moon.fill"
+    case "cloud.rain":
+        return "cloud.rain.fill"
+    case "cloud.drizzle":
+        return "cloud.drizzle.fill"
+    case "cloud.heavyrain":
+        return "cloud.heavyrain.fill"
+    case "cloud.snow":
+        return "cloud.snow.fill"
+    case "cloud.sleet":
+        return "cloud.sleet.fill"
+    case "cloud.hail":
+        return "cloud.hail.fill"
+    case "cloud.bolt":
+        return "cloud.bolt.fill"
+    case "cloud.bolt.rain":
+        return "cloud.bolt.rain.fill"
+    case "smoke":
+        return "smoke.fill"
+    case "wind":
+        return "wind"
+    case "tornado":
+        return "tornado"
+    case "moon":
+        return "moon.fill"
+    case "moon.stars":
+        return "moon.stars.fill"
+    default:
+        // If already has .fill suffix or is unknown, return as-is
+        return symbolName
+    }
 }

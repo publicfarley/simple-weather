@@ -13,7 +13,8 @@ struct DailyForecastRowView: View {
             
             // Weather icon
             Image(systemName: forecast.conditionSymbolName)
-                .symbolRenderingMode(.multicolor)
+                .symbolRenderingMode(.monochrome)
+                .foregroundColor(.secondary)
                 .font(.title3)
                 .frame(width: 30, alignment: .center)
                 .accessibilityLabel(Text(forecast.conditionDescription))

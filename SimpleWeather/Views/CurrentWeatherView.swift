@@ -90,21 +90,23 @@ struct CurrentWeatherView: View {
     // Function to determine icon color based on symbol name
     private func iconColor(for symbolName: String) -> Color {
         let lowercased = symbolName.lowercased()
-        if lowercased.contains("sun") {
-            // Pastel yellow
-            return Color(red: 1.0, green: 0.98, blue: 0.73)
+        
+        return if lowercased.contains("sun") {
+            // Pastel orange
+            Color.orange.opacity(0.7)
         } else if lowercased.contains("rain") || lowercased.contains("drizzle") || lowercased.contains("shower") {
             // Pastel blue
-            return Color(red: 0.66, green: 0.82, blue: 1.0)
+            Color.blue.opacity(0.6)
         } else if lowercased.contains("snow") || lowercased.contains("sleet") || lowercased.contains("ice") {
             // Pastel cyan
-            return Color(red: 0.85, green: 1.0, blue: 0.98)
+            Color.cyan.opacity(0.5)
+            
         } else if lowercased.contains("cloud") || lowercased.contains("fog") || lowercased.contains("mist") {
             // Pastel gray
-            return Color(red: 0.88, green: 0.91, blue: 0.93)
+            Color.teal.opacity(0.6)
         } else {
             // Gentle pastel off-white
-            return Color(red: 0.97, green: 0.97, blue: 1.0)
+            Color.indigo.opacity(0.7)
         }
     }
 
