@@ -5,7 +5,7 @@ import Combine
 @Observable
 class LocationManager: NSObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
-    private let locationCache: LocationCache
+    private let locationCache: LocationCache?
     var didUseCachedLocation = false
 
     var location: CLLocation? = nil
@@ -13,7 +13,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     var authorizationStatus: CLAuthorizationStatus
     var locationError: Error? = nil
 
-    init(locationCache: LocationCache) {
+    init(locationCache: LocationCache?) {
         self.locationCache = locationCache
         authorizationStatus = locationManager.authorizationStatus
         super.init()
@@ -22,8 +22,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         locationManager.distanceFilter = kCLDistanceFilterNone
         print("[LocationManager] Initialized. Authorization status: \(authorizationStatus.description)")
         
-        // Try to load cached location first
-        if let cachedLocation = locationCache.getCachedLocation() {
+        // Try to load cached location first if cache is available
+        if let locationCache = locationCache,
+           let cachedLocation = locationCache.getCachedLocation() {
             self.location = cachedLocation
             self.didUseCachedLocation = true
             print("[LocationManager] Using cached location: \(cachedLocation.coordinate)")
@@ -73,7 +74,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         self.location = newLocation
         self.locationError = nil
         self.didUseCachedLocation = false
-        locationCache.cacheLocation(newLocation)
+        locationCache?.cacheLocation(newLocation)
         print("[LocationManager] Updated location: \(newLocation.coordinate)")
     }
 

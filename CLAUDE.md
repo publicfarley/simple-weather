@@ -578,3 +578,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Project Status
 
 This document represents the current state and standards for the project. Updates should be made as the project evolves and new patterns are established.
+
+## Development Notes
+
+### Build Environment
+- **Always use iPhone 16 to build the project**

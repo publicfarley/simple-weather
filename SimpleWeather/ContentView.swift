@@ -14,9 +14,16 @@ struct ContentView: View {
     @StateObject private var weatherService = WeatherService()
     
     init() {
-        let container = try! ModelContainer(for: SavedLocation.self, CachedLocation.self)
-        let locationCache = LocationCache(modelContext: container.mainContext)
-        self._locationManager = State(wrappedValue: LocationManager(locationCache: locationCache))
+        do {
+            let container = try ModelContainer(for: SavedLocation.self, CachedLocation.self)
+            let locationCache = LocationCache(modelContext: container.mainContext)
+            self._locationManager = State(wrappedValue: LocationManager(locationCache: locationCache))
+        } catch {
+            // Handle container initialization failure gracefully
+            // Create a fallback LocationManager without persistence
+            print("Failed to initialize model container: \(error)")
+            self._locationManager = State(wrappedValue: LocationManager(locationCache: nil))
+        }
     }
     
     @Environment(\.scenePhase) private var scenePhase
