@@ -117,3 +117,27 @@
     *   [ ] Prepare screenshots.
     *   [ ] Write app description.
     *   [ ] Finalize bundle ID, version number.
+
+## Phase 8: Code Quality Improvements (Based on CODE_REVIEW.md)
+23. **🔴 Critical Priority Fixes:**
+    *   [ ] Replace force unwrapping in ContentView.swift:17 - Fix ModelContainer initialization with proper error handling
+    *   [ ] Fix DispatchQueue usage in SimpleWeatherApp.swift:36 - Replace with Task-based timing
+    *   [ ] Refactor large function in CurrentWeatherView.swift:38-88 - Break down reverseGeocode function
+    *   [ ] Add proper error handling in LocationStorage.swift - Replace silent try? with proper error logging
+24. **🟡 Medium Priority Improvements:**
+    *   [ ] Standardize on @Observable throughout services - Update WeatherService to use @Observable
+    *   [ ] Add comprehensive error types - Create WeatherServiceError enum with LocalizedError
+    *   [ ] Implement configurable cache expiration - Create CacheConfiguration enum
+    *   [ ] Add integration tests - Test location update triggers weather refresh
+    *   [ ] Add timeout handling for geocoding requests in GeocodingService.swift
+25. **🟢 Low Priority Enhancements:**
+    *   [ ] Centralize geocoding service usage - Optimize CLGeocoder instance creation
+    *   [ ] Add performance monitoring capabilities
+    *   [ ] Implement advanced caching strategies with dynamic expiration
+    *   [ ] Add accessibility improvements for better user experience
+    *   [ ] Improve coordinate equality checking with tolerance in LocationStorage.swift
+26. **Code Quality & Consistency:**
+    *   [ ] Run SwiftLint and fix any violations
+    *   [ ] Run SwiftFormat for consistent code formatting
+    *   [ ] Add proper logging throughout the application
+    *   [ ] Review and update error messages for better user experience
