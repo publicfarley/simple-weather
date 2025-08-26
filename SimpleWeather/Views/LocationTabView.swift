@@ -12,6 +12,8 @@ struct LocationTabView: View {
     @State private var showingLocationList = false
     @State private var isInitialized = false
     @State private var showingAbout = false
+    @State private var initializationTask: Task<Void, Never>? = nil
+    @State private var locationUpdateTask: Task<Void, Never>? = nil
     
     var body: some View {
         NavigationStack {
@@ -54,13 +56,30 @@ struct LocationTabView: View {
         }
         .task {
             if !isInitialized {
-                await initializeDefaultLocation()
-                isInitialized = true
+                initializationTask = Task {
+                    await initializeDefaultLocation()
+                    isInitialized = true
+                }
+                await initializationTask?.value
             }
+        }
+        .onDisappear {
+            initializationTask?.cancel()
+            locationUpdateTask?.cancel()
         }
         .onChange(of: locationManager.location) { _, newLocation in
             if let newLocation = newLocation, selectedLocation?.isCurrentLocation == true {
-                Task {
+                // Cancel any existing location update task
+                locationUpdateTask?.cancel()
+                
+                // Start a new debounced location update
+                locationUpdateTask = Task {
+                    // Debounce rapid location updates
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                    
+                    // Check if task was cancelled
+                    guard !Task.isCancelled else { return }
+                    
                     await updateCurrentLocationIfNeeded(newLocation)
                 }
             }
@@ -75,29 +94,50 @@ struct LocationTabView: View {
     }
     
     private func initializeDefaultLocation() async {
-        // Always try to get current location first from GPS
-        if let location = locationManager.location {
-            await updateCurrentLocationIfNeeded(location)
-            return
-        }
-        
-        // Request fresh location permission and get current location
-        locationManager.requestLocationAccess()
-        
-        // Wait for location to be determined, but be more responsive
-        var waitTime = 0.0
-        let maxWaitTime = 5.0 // Maximum 5 seconds
-        let checkInterval = 0.1 // Check every 100ms
-        
-        while waitTime < maxWaitTime && locationManager.location == nil && locationManager.isLoading {
-            try? await Task.sleep(nanoseconds: UInt64(checkInterval * 1_000_000_000))
-            waitTime += checkInterval
-        }
-        
-        if let location = locationManager.location {
-            await updateCurrentLocationIfNeeded(location)
-        } else {
-            // Only fallback to saved current location if GPS fails
+        do {
+            // Always try to get current location first from GPS
+            if let location = locationManager.location {
+                await updateCurrentLocationIfNeeded(location)
+                return
+            }
+            
+            // Request fresh location permission and get current location
+            locationManager.requestLocationAccess()
+            
+            // Wait for location to be determined with exponential backoff
+            let initialDelay = 0.1
+            let maxDelay = 2.0
+            let maxWaitTime = 5.0
+            var currentDelay = initialDelay
+            var totalWaitTime = 0.0
+            
+            while totalWaitTime < maxWaitTime && locationManager.location == nil && locationManager.isLoading {
+                try await Task.sleep(nanoseconds: UInt64(currentDelay * 1_000_000_000))
+                totalWaitTime += currentDelay
+                
+                // Check for cancellation
+                try Task.checkCancellation()
+                
+                // Exponential backoff
+                currentDelay = min(currentDelay * 1.5, maxDelay)
+            }
+            
+            if let location = locationManager.location {
+                await updateCurrentLocationIfNeeded(location)
+            } else {
+                // Only fallback to saved current location if GPS fails
+                if let currentLocation = locationStorage.currentLocation {
+                    selectedLocation = currentLocation
+                }
+            }
+        } catch is CancellationError {
+            // Task was cancelled, use cached location if available
+            if let currentLocation = locationStorage.currentLocation {
+                selectedLocation = currentLocation
+            }
+        } catch {
+            // Handle other errors gracefully
+            print("Error during initialization: \(error)")
             if let currentLocation = locationStorage.currentLocation {
                 selectedLocation = currentLocation
             }
@@ -122,7 +162,14 @@ struct LocationTabView: View {
     
     private func updateCurrentLocationIfNeeded(_ location: CLLocation) async {
         do {
+            // Check for cancellation before starting geocoding
+            try Task.checkCancellation()
+            
             let locationName = try await geocodingService.reverseGeocode(coordinate: location.coordinate)
+            
+            // Check for cancellation after geocoding
+            try Task.checkCancellation()
+            
             let currentLocation = SavedLocation(
                 name: locationName,
                 coordinate: location.coordinate,
@@ -133,6 +180,9 @@ struct LocationTabView: View {
             
             // Always update selected location to current location
             selectedLocation = currentLocation
+        } catch is CancellationError {
+            // Task was cancelled, don't update anything
+            return
         } catch {
             print("Failed to reverse geocode current location: \(error)")
             // Create a fallback current location
