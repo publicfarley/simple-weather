@@ -11,7 +11,7 @@ import SwiftData
 
 struct ContentView: View {
     @State private var locationManager: LocationManager
-    @StateObject private var weatherService = WeatherService()
+    @Environment(WeatherService.self) private var weatherService
     
     init() {
         do {

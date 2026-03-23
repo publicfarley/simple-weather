@@ -1,6 +1,5 @@
 import Foundation
 import CoreLocation
-import Combine
 
 @Observable
 class LocationManager: NSObject, CLLocationManagerDelegate {

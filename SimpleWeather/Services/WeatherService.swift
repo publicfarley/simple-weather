@@ -3,15 +3,16 @@ import WeatherKit
 import CoreLocation
 
 @MainActor
-class WeatherService: ObservableObject {
+@Observable
+class WeatherService {
     private let weatherService = WeatherKit.WeatherService.shared
 
-    @Published var currentWeather: CurrentWeather? = nil
-    @Published var dailyForecast: [DailyForecast]? = nil
-    @Published var hourlyForecast: [HourlyForecast]? = nil
-    @Published var isLoadingCurrentWeather: Bool = false
-    @Published var isLoadingForecast: Bool = false
-    @Published var weatherError: Error? = nil
+    var currentWeather: CurrentWeather? = nil
+    var dailyForecast: [DailyForecast]? = nil
+    var hourlyForecast: [HourlyForecast]? = nil
+    var isLoadingCurrentWeather: Bool = false
+    var isLoadingForecast: Bool = false
+    var weatherError: Error? = nil
     
     // Cache for location-specific weather data
     private var locationWeatherCache: [String: LocationWeatherData] = [:]

@@ -6,7 +6,7 @@ struct LocationTabView: View {
     @Environment(LocationStorage.self) private var locationStorage
     @Environment(GeocodingService.self) private var geocodingService
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject private var weatherService = WeatherService()
+    @Environment(WeatherService.self) private var weatherService
     
     @State private var selectedLocation: SavedLocation?
     @State private var showingLocationList = false

@@ -17,6 +17,7 @@ struct SimpleWeatherApp: App {
     @State private var locationCache: LocationCache?
     @State private var locationManager: LocationManager?
     @State private var geocodingService: GeocodingService?
+    @State private var weatherService: WeatherService?
     
     init() {
         do {
@@ -42,11 +43,13 @@ struct SimpleWeatherApp: App {
                 } else {
                     if let locationStorage = locationStorage,
                        let locationManager = locationManager,
-                       let geocodingService = geocodingService {
+                       let geocodingService = geocodingService,
+                       let weatherService = weatherService {
                         LocationTabView()
                             .environment(locationStorage)
                             .environment(locationManager)
                             .environment(geocodingService)
+                            .environment(weatherService)
                     } else {
                         ProgressView("Loading...")
                     }
@@ -65,6 +68,7 @@ struct SimpleWeatherApp: App {
         self.locationStorage = LocationStorage(modelContext: context)
         self.locationCache = LocationCache(modelContext: context)
         self.geocodingService = GeocodingService()
+        self.weatherService = WeatherService()
         
         if let cache = locationCache {
             self.locationManager = LocationManager(locationCache: cache)

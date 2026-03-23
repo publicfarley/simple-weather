@@ -5,7 +5,7 @@ import SwiftData
 struct WeatherContentView: View {
     let location: SavedLocation
     var locationManager: LocationManager
-    @ObservedObject var weatherService: WeatherService
+    var weatherService: WeatherService
     @Binding var showingAbout: Bool
     
     @Environment(\.scenePhase) private var scenePhase
